@@ -6,7 +6,7 @@ import { Resend } from 'resend';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ВАША ПОЧТА (сюда будут приходить все письма, пока нет домена)
+// ВАША ПОЧТА (сюда будут приходить все письма)
 const ADMIN_EMAIL = 'reponsesecurisee@gmail.com';
 
 // --- ПРОМПТЫ (ИНСТРУКЦИИ) ---
