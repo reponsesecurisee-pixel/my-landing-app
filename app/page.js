@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Check, AlertCircle, Loader2, Shield, Briefcase, Scale, AlertTriangle, XCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Check, AlertCircle, Loader2, Shield, Briefcase, Scale, AlertTriangle, XCircle, Mail } from 'lucide-react';
 
-// 👇 СЮДА ВСТАВИТЬ ССЫЛКУ LEMON SQUEEZY
-const LEMON_SQUEEZY_LINK = "https://reponse-securisee.lemonsqueezy.com/checkout/buy/d4e3b498-d99e-4d28-bb39-af9e1ef5de6b"; 
+// 👇 ТВОЯ ССЫЛКА LEMON SQUEEZY
+const LEMON_SQUEEZY_LINK = "https://reponse-btp.lemonsqueezy.com/checkout/buy/...."; // <-- Вставь свою ссылку сюда!
 
 export default function ReclamationApp() {
   const [step, setStep] = useState('form');
@@ -16,11 +16,50 @@ export default function ReclamationApp() {
   const [paidResponse, setPaidResponse] = useState('');
   const [error, setError] = useState('');
   
-  useEffect(() => {}, []);
-  const markFreeAsUsed = () => {};
+  // Этот эффект срабатывает 1 раз при загрузке сайта
+  useEffect(() => {
+    // 1. Проверяем, вернулся ли клиент после оплаты (есть ли ?paid=true в ссылке)
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPaid = urlParams.get('paid');
 
-  // Функция отправляет тип запроса ('free' или 'paid') на сервер
-  const callOpenAI = async (type, userMessage, userEmail = null) => {
+    if (isPaid === 'true') {
+      // 2. Достаем сохраненные данные из "кармана" (LocalStorage)
+      const savedComplaint = localStorage.getItem('pending_complaint');
+      const savedEmail = localStorage.getItem('pending_email');
+      const savedSituation = localStorage.getItem('pending_situation');
+
+      if (savedComplaint && savedEmail) {
+        // Восстанавливаем данные
+        setComplaint(savedComplaint);
+        setEmail(savedEmail);
+        setSituation(savedSituation || '');
+        
+        // 3. Запускаем генерацию ПЛАТНОГО ответа автоматически
+        autoGeneratePaid(savedComplaint, savedSituation, savedEmail);
+      }
+    }
+  }, []);
+
+  const autoGeneratePaid = async (msg, sit, mail) => {
+    setLoading(true);
+    setStep('payment'); // Визуально показываем экран загрузки
+    try {
+      // Вызываем наш API
+      const result = await callOpenAI('paid', msg, sit, mail);
+      setPaidResponse(result);
+      setStep('paid-result');
+      
+      // Чистим память и ссылку, чтобы не запускалось вечно
+      localStorage.removeItem('pending_complaint');
+      window.history.replaceState({}, document.title, "/"); 
+    } catch (err) {
+      setError('Erreur lors de la génération. Contactez le support.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const callOpenAI = async (type, userMessage, userSit, userEmail = null) => {
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -28,7 +67,7 @@ export default function ReclamationApp() {
         body: JSON.stringify({ 
           type: type, 
           complaint: userMessage, 
-          situation: situation, 
+          situation: userSit, 
           email: userEmail 
         }),
       });
@@ -49,9 +88,8 @@ export default function ReclamationApp() {
     }
     setLoading(true);
     try {
-      const result = await callOpenAI('free', complaint);
+      const result = await callOpenAI('free', complaint, situation);
       setFreeResponse(result);
-      markFreeAsUsed(); 
       setStep('free-result');
     } catch (err) {
       setError('Une erreur est survenue.');
@@ -61,27 +99,22 @@ export default function ReclamationApp() {
   };
 
   const handlePaymentClick = () => {
+    // 1. Проверяем, ввел ли клиент email
+    if (!email || !email.includes('@')) {
+       alert("Veuillez entrer votre email avant de payer pour recevoir le dossier.");
+       return;
+    }
+
+    // 2. Сохраняем данные в "карман" перед уходом
+    localStorage.setItem('pending_complaint', complaint);
+    localStorage.setItem('pending_email', email);
+    localStorage.setItem('pending_situation', situation);
+
+    // 3. Отправляем на оплату
     if (LEMON_SQUEEZY_LINK && LEMON_SQUEEZY_LINK.includes('http')) {
         window.location.href = LEMON_SQUEEZY_LINK;
     } else {
-        setStep('payment'); 
-    }
-  };
-
-  const handlePaidGeneration = async () => {
-    if (!email || !email.includes('@')) {
-      setError('Veuillez saisir une adresse email valide.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const result = await callOpenAI('paid', complaint, email);
-      setPaidResponse(result);
-      setStep('paid-result');
-    } catch (err) {
-      setError('Une erreur technique est survenue.');
-    } finally {
-      setLoading(false);
+        alert("Ajoutez votre lien Lemon Squeezy dans le code !");
     }
   };
 
@@ -112,6 +145,7 @@ export default function ReclamationApp() {
           </div>
         )}
 
+        {/* ШАГ 1: ФОРМА */}
         {step === 'form' && (
           <div className="bg-white rounded-xl shadow-lg p-8">
              <div className="grid grid-cols-3 gap-4 mb-8 text-center">
@@ -174,18 +208,16 @@ export default function ReclamationApp() {
           </div>
         )}
 
-        {/* 📋 ЭКРАН РЕЗУЛЬТАТА - НОВЫЙ БЛОК ПРОДАЖ */}
+        {/* ШАГ 2: БЕСПЛАТНЫЙ РЕЗУЛЬТАТ + ПРОДАЖА */}
         {step === 'free-result' && (
           <div className="space-y-8">
             <div className="bg-white rounded-xl shadow-lg p-8">
               <h2 className="text-xl font-semibold text-slate-600 mb-4">Votre ébauche (Brouillon indicatif)</h2>
               
-              {/* Текст бесплатного ответа */}
               <div className="bg-slate-50 rounded-lg p-6 border border-slate-200 mb-8">
                 <p className="text-slate-600 italic whitespace-pre-wrap">{freeResponse}</p>
               </div>
 
-              {/* ЗАГОЛОВОК СРАВНЕНИЯ */}
               <div className="text-center mb-6">
                 <h3 className="text-xl font-bold text-slate-800">
                   ⚠️ Attention : Une réponse imprécise peut être utilisée contre vous
@@ -193,9 +225,8 @@ export default function ReclamationApp() {
                 <p className="text-slate-600 text-sm mt-1">Comparatif des options pour sécuriser votre entreprise :</p>
               </div>
 
-              {/* ТАБЛИЦА СРАВНЕНИЯ (ТРИГГЕРЫ) */}
               <div className="grid md:grid-cols-3 gap-4 mb-8">
-                {/* 1. Делать самому */}
+                {/* Ответить самому */}
                 <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center text-center opacity-70 hover:opacity-100 transition">
                    <div className="bg-slate-100 p-3 rounded-full mb-3">
                      <AlertTriangle className="w-6 h-6 text-slate-500" />
@@ -212,5 +243,115 @@ export default function ReclamationApp() {
                    </div>
                 </div>
 
-                {/* 2. Юрист */}
-                <div className="
+                {/* Юрист */}
+                <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center text-center">
+                   <div className="bg-blue-50 p-3 rounded-full mb-3">
+                     <Scale className="w-6 h-6 text-blue-600" />
+                   </div>
+                   <h4 className="font-bold text-slate-700 mb-2">Avocat</h4>
+                   <ul className="text-xs text-slate-600 space-y-2 mb-4 text-left w-full">
+                     <li className="flex gap-2"><Check className="w-3 h-3 text-green-500"/> Sécurité juridique</li>
+                     <li className="flex gap-2"><Check className="w-3 h-3 text-green-500"/> Professionnel</li>
+                     <li className="flex gap-2"><AlertCircle className="w-3 h-3 text-orange-400"/> Délais (48h+)</li>
+                   </ul>
+                   <div className="mt-auto pt-4 border-t w-full">
+                     <span className="block text-xs text-slate-500">Coût moyen</span>
+                     <span className="font-bold text-slate-800">~250€ / heure</span>
+                   </div>
+                </div>
+
+                {/* Наш сервис */}
+                <div className="border-2 border-slate-800 bg-slate-50 rounded-xl p-4 flex flex-col items-center text-center relative shadow-lg transform scale-105 z-10">
+                   <div className="absolute -top-3 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase">
+                     Recommandé
+                   </div>
+                   <div className="bg-slate-800 p-3 rounded-full mb-3">
+                     <Shield className="w-6 h-6 text-white" />
+                   </div>
+                   <h4 className="font-bold text-slate-800 mb-2">Notre IA Experte</h4>
+                   <ul className="text-xs text-slate-700 space-y-2 mb-4 text-left w-full">
+                     <li className="flex gap-2"><Check className="w-3 h-3 text-green-600"/> <strong>Immédiat</strong> (10 sec)</li>
+                     <li className="flex gap-2"><Check className="w-3 h-3 text-green-600"/> Neutre & Factuel</li>
+                     <li className="flex gap-2"><Check className="w-3 h-3 text-green-600"/> Sans reconnaissance de faute</li>
+                   </ul>
+                   <div className="mt-auto pt-4 border-t border-slate-300 w-full">
+                     <span className="block text-xs text-slate-500">Prix unique</span>
+                     <span className="font-bold text-2xl text-green-600">9,90€</span>
+                   </div>
+                </div>
+              </div>
+
+              {/* Поле для email ПЕРЕД оплатой */}
+              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4 max-w-md mx-auto">
+                 <label className="block text-sm font-bold text-yellow-800 mb-2">
+                    Votre email (pour recevoir le dossier) *
+                 </label>
+                 <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="votre@email.com"
+                    className="w-full px-4 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-slate-500 bg-white"
+                 />
+              </div>
+
+              <div className="text-center mt-2">
+                <button
+                  onClick={handlePaymentClick}
+                  className="w-full md:w-auto px-8 bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-lg transition shadow-xl text-lg flex items-center justify-center gap-3 mx-auto"
+                >
+                  <Shield className="w-5 h-5" />
+                  Sécuriser ma réponse maintenant - 9,90€
+                </button>
+                <p className="text-xs text-slate-500 mt-3">
+                  Paiement sécurisé • Reçu immédiat • Satisfait ou remboursé
+                </p>
+              </div>
+
+            </div>
+            
+            <button onClick={resetForm} className="text-slate-500 hover:text-slate-700 mx-auto block text-sm">
+              Recommencer le test
+            </button>
+          </div>
+        )}
+
+        {/* ШАГ 3: ЗАГРУЗКА ПОСЛЕ ОПЛАТЫ */}
+        {step === 'payment' && (
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+             <Loader2 className="w-12 h-12 animate-spin text-slate-800 mx-auto mb-4" />
+             <h2 className="text-xl font-bold text-slate-800">Paiement validé !</h2>
+             <p className="text-slate-600">Génération de votre dossier complet en cours...</p>
+          </div>
+        )}
+
+        {/* ШАГ 4: ФИНАЛ (ОТВЕТ) */}
+        {step === 'paid-result' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-8">
+              <div className="flex items-center gap-2 mb-6 text-green-600">
+                <Check className="w-6 h-6" />
+                <h2 className="text-2xl font-semibold text-slate-800">Dossier sécurisé généré</h2>
+              </div>
+
+              <div className="bg-slate-50 rounded-lg p-8 border border-slate-200 mb-6 shadow-inner">
+                <p className="text-slate-800 whitespace-pre-wrap leading-relaxed font-serif text-justify">{paidResponse}</p>
+              </div>
+
+              <button
+                onClick={() => { navigator.clipboard.writeText(paidResponse); alert('Copié !'); }}
+                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-4 rounded-lg transition shadow-lg flex items-center justify-center gap-2"
+              >
+                📋 Copier le texte
+              </button>
+              <p className="text-center text-sm text-slate-500 mt-4">
+                 Une copie est en cours d'envoi à {email}
+              </p>
+            </div>
+             <button onClick={resetForm} className="text-slate-500 hover:text-slate-700 mx-auto block">Nouveau dossier</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
