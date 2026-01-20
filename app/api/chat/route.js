@@ -1,7 +1,16 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { Resend } from 'resend';
 
-// Промпты (оставляем как были)
+// Инициализация сервисов
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// ВАША ПОЧТА (на которую будут приходить копии заказов и сообщения поддержки)
+const ADMIN_EMAIL = 'reponsesecurisee@gmail.com';
+
+// --- ПРОМПТЫ (ИНСТРУКЦИИ ДЛЯ AI) ---
+
 const PROMPT_FREE = `Tu es un assistant spécialisé dans la rédaction de réponses professionnelles à des réclamations clients en France.
 Ta mission est de proposer une première ébauche de réponse, à titre indicatif.
 RÈGLES STRICTES :
@@ -52,35 +61,39 @@ IMPORTANT :
 * Varie les formulations à chaque génération
 * Intègre les détails spécifiques du cas sans utiliser de crochets`;
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// --- ОСНОВНАЯ ЛОГИКА ---
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { type, email, message, name } = body;
+    const { type, email, message, name, complaint, situation } = body;
 
-    // 1. ЛОГИКА ДЛЯ ОБРАТНОЙ СВЯЗИ
+    // 1. ОБРАБОТКА СООБЩЕНИЙ ПОДДЕРЖКИ (SUPPORT)
     if (type === 'feedback') {
-      console.log("------------------------------------------------");
-      console.log("📩 NOUVEAU MESSAGE SUPPORT");
-      console.log("👤 Nom:", name);
-      console.log("📧 Email:", email);
-      console.log("💬 Message:", message);
-      console.log("------------------------------------------------");
+      if (process.env.RESEND_API_KEY) {
+        try {
+          await resend.emails.send({
+            from: 'onboarding@resend.dev',
+            to: ADMIN_EMAIL, 
+            subject: `🔔 SUPPORT: Message de ${name}`,
+            html: `
+              <h3>Nouveau message de support</h3>
+              <p><strong>Nom:</strong> ${name}</p>
+              <p><strong>Email client:</strong> ${email}</p>
+              <hr />
+              <p><strong>Message:</strong></p>
+              <p>${message}</p>
+            `
+          });
+          console.log("✅ Message support envoyé à l'admin");
+        } catch (err) {
+          console.error("❌ Erreur envoi support:", err);
+        }
+      }
       return NextResponse.json({ result: "Message reçu" });
     }
 
-    // 2. ЛОГИКА ДЛЯ ГЕНЕРАЦИИ (Free/Paid)
-    const { complaint, situation } = body;
-
-    // Логируем клиента
-    console.log("------------------------------------------------");
-    console.log("🔔 CLIENT ACTIF:", email || "Gratuit");
-    console.log("💰 Type:", type);
-    console.log("------------------------------------------------");
-
+    // 2. ГЕНЕРАЦИЯ ОТВЕТА (AI)
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
     }
@@ -93,15 +106,3 @@ export async function POST(req) {
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Situation: ${situation}. Message client: ${complaint}` },
-      ],
-      temperature: 0.7,
-      max_tokens: maxTokens,
-    });
-
-    return NextResponse.json({ result: completion.choices[0].message.content });
-
-  } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-  }
-}
