@@ -1,21 +1,22 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Check, AlertCircle, Loader2, Shield, FileCheck } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Shield, Briefcase, Star, Clock, FileText } from 'lucide-react';
 
-// 👇 СЮДА ВСТАВИТЬ ССЫЛКУ LEMON SQUEEZY (когда создадите товар)
+// 👇 СЮДА ВСТАВИТЬ ССЫЛКУ LEMON SQUEEZY
 const LEMON_SQUEEZY_LINK = ""; 
 
-// 🔴 ПРОМПТ БЕСПЛАТНЫЙ
-const PROMPT_FREE = `Tu es un assistant administratif basique.
-Ta mission est de rédiger un simple ACCUSÉ DE RÉCEPTION.
+// 🔴 ПРОМПТ БЕСПЛАТНЫЙ (Вежливый "режим ожидания")
+const PROMPT_FREE = `Tu es un assistant administratif poli et courtois.
+Ta mission est de rédiger un ACCUSÉ DE RÉCEPTION D'ATTENTE.
 RÈGLES :
-* Fais très COURT (2 ou 3 phrases maximum).
-* Dis seulement : "Nous avons bien reçu votre réclamation concernant [sujet]. Nous allons étudier votre dossier. Sans réponse de notre part sous 15 jours, considérez le dossier clos."
-* Sois froid et robotique.
-* Ne donne AUCUNE explication, AUCUNE excuse, AUCUN détail.`;
+* Ton objectif est de temporiser (gagner du temps) sans énerver le client.
+* Remercie pour le message de façon professionnelle.
+* Dis simplement : "Nous avons bien pris en compte votre remarque concernant [sujet]. Nous allons transmettre les éléments à l'équipe technique pour analyse. Nous reviendrons vers vous une fois les vérifications effectuées."
+* Ne donne AUCUN délai précis.
+* Ne prends AUCUN engagement, ni refus, ni acceptation. Juste "on regarde".`;
 
-// 🟢 ПРОМПТ ПЛАТНЫЙ
+// 🟢 ПРОМПТ ПЛАТНЫЙ (Ваш строгий оригинал)
 const PROMPT_PAID = `Tu es un expert juridique senior spécialisé dans la gestion des litiges du bâtiment et des services.
 Ta mission est de rédiger une réponse OFFICIELLE, DÉTAILLÉE et STRATÉGIQUE.
 
@@ -47,39 +48,18 @@ export default function ReclamationApp() {
   const [freeResponse, setFreeResponse] = useState('');
   const [paidResponse, setPaidResponse] = useState('');
   const [error, setError] = useState('');
-  const [hasUsedFree, setHasUsedFree] = useState(false);
-
-  useEffect(() => {
-    // ОТКЛЮЧЕНА ПРОВЕРКА ДЛЯ ТЕСТОВ
-    /*
-    if (typeof window !== 'undefined') {
-      const localUsed = localStorage.getItem('used_free_test');
-      if (localUsed) {
-        setHasUsedFree(true);
-      }
-    }
-    */
-  }, []);
-
-  const markFreeAsUsed = () => {
-    // ОТКЛЮЧЕНА ЗАПИСЬ ДЛЯ ТЕСТОВ
-    // localStorage.setItem('used_free_test', 'true');
-    // setHasUsedFree(true);
-  };
+  
+  // Отключили ограничения для теста
+  useEffect(() => {}, []);
+  const markFreeAsUsed = () => {};
 
   const callOpenAI = async (systemPrompt, userMessage) => {
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          systemPrompt: systemPrompt, 
-          userMessage: userMessage 
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemPrompt, userMessage }),
       });
-
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Erreur API');
       return data.result;
@@ -91,19 +71,10 @@ export default function ReclamationApp() {
 
   const handleSubmitFree = async () => {
     setError('');
-    
     if (!complaint || !situation) {
       setError('Veuillez remplir tous les champs obligatoires.');
       return;
     }
-
-    /* ОТКЛЮЧЕНА БЛОКИРОВКА ДЛЯ ТЕСТОВ
-    if (hasUsedFree) {
-      setError('Vous avez déjà utilisé votre test gratuit. Pour obtenir une réponse complète, procédez au paiement de 9,90€.');
-      return;
-    }
-    */
-
     setLoading(true);
     try {
       const response = await callOpenAI(PROMPT_FREE, `Situation: ${situation}. Message client: ${complaint}`);
@@ -111,8 +82,7 @@ export default function ReclamationApp() {
       markFreeAsUsed(); 
       setStep('free-result');
     } catch (err) {
-      console.error('Error:', err);
-      setError('Une erreur est survenue lors de la génération. Veuillez réessayer.');
+      setError('Une erreur est survenue.');
     } finally {
       setLoading(false);
     }
@@ -127,16 +97,13 @@ export default function ReclamationApp() {
   };
 
   const handlePaidGeneration = async () => {
-    // Проверка Email
     if (!email || !email.includes('@')) {
-      setError('Veuillez saisir une adresse email valide pour recevoir votre dossier.');
+      setError('Veuillez saisir une adresse email valide.');
       return;
     }
-    
     setLoading(true);
     try {
       const fullMessage = `Situation: ${situation}. Message client: ${complaint}. (Email client: ${email})`;
-      
       const response = await callOpenAI(PROMPT_PAID, fullMessage);
       setPaidResponse(response);
       setStep('paid-result');
@@ -160,13 +127,10 @@ export default function ReclamationApp() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8 pt-8">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4 leading-tight">
-            Une mauvaise réponse écrite peut créer un risque juridique
+            Gérez les réclamations abusives sans perdre votre calme
           </h1>
           <p className="text-slate-600 text-base md:text-lg mb-3 max-w-3xl mx-auto">
-            Générez une réponse professionnelle et juridiquement neutre, sans reconnaissance de faute ni engagement.
-          </p>
-          <p className="text-sm text-slate-500 mb-4">
-            Pour les artisans et petites entreprises du bâtiment confrontés à des réclamations clients
+            Obtenez une réponse professionnelle, ferme et factuelle pour clore les discussions stériles.
           </p>
         </div>
 
@@ -179,158 +143,157 @@ export default function ReclamationApp() {
 
         {step === 'form' && (
           <div className="bg-white rounded-xl shadow-lg p-8">
-             {/* Иконки преимуществ */}
              <div className="grid grid-cols-3 gap-4 mb-8 text-center">
               <div className="flex flex-col items-center">
                 <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-2">
                   <Shield className="w-6 h-6 text-slate-700" />
                 </div>
-                <div className="text-xs font-semibold text-slate-700">Sans reconnaissance de faute</div>
+                <div className="text-xs font-semibold text-slate-700">Protection image</div>
               </div>
               <div className="flex flex-col items-center">
                 <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-2">
-                  <FileCheck className="w-6 h-6 text-slate-700" />
+                  <Briefcase className="w-6 h-6 text-slate-700" />
                 </div>
-                <div className="text-xs font-semibold text-slate-700">Sans promesse de compensation</div>
+                <div className="text-xs font-semibold text-slate-700">Ton expert</div>
               </div>
               <div className="flex flex-col items-center">
                 <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-2">
                   <Check className="w-6 h-6 text-slate-700" />
                 </div>
-                <div className="text-xs font-semibold text-slate-700">Ton neutre et factuel</div>
+                <div className="text-xs font-semibold text-slate-700">Sans faute</div>
               </div>
             </div>
 
-            <h2 className="text-xl font-semibold text-slate-800 mb-6">Voir un exemple de réponse</h2>
+            <h2 className="text-xl font-semibold text-slate-800 mb-6">Générer une réponse</h2>
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Message de réclamation du client *
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Message du client *</label>
                 <textarea
                   value={complaint}
                   onChange={(e) => setComplaint(e.target.value)}
                   rows={6}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent text-sm"
-                  placeholder="Exemple : Bonjour, je vous contacte concernant les travaux réalisés chez moi le mois dernier. La qualité du travail ne correspond pas à ce qui était prévu dans le devis..."
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 text-sm"
+                  placeholder="Collez le message du client ici..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Type de situation *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Situation *</label>
                 <select
                   value={situation}
                   onChange={(e) => setSituation(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg"
                 >
-                  <option value="">Sélectionnez...</option>
-                  <option value="retard">Retard de travaux</option>
-                  <option value="qualite">Qualité contestée</option>
-                  <option value="facturation">Facturation</option>
-                  <option value="comportement">Communication</option>
+                  <option value="">Choisir...</option>
+                  <option value="retard">Retard de chantier</option>
+                  <option value="qualite">Défaut / Finitions</option>
+                  <option value="facturation">Contestation facture</option>
                   <option value="autre">Autre</option>
                 </select>
               </div>
 
-              {/* Кнопка бесплатного теста */}
               <button
                 onClick={handleSubmitFree}
                 disabled={loading}
-                className="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-4 rounded-lg transition flex items-center justify-center gap-2"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Génération en cours...
-                  </>
-                ) : (
-                  'Générer une réponse test'
-                )}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Générer réponse TEST'}
               </button>
-            </div>
-
-            {/* БЛОК КОНФИДЕНЦИАЛЬНОСТИ */}
-            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-2">
-                <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-slate-700">
-                  <p className="font-semibold text-slate-800 mb-1">Confidentialité garantie</p>
-                  <p className="text-xs text-slate-600">Aucune donnée stockée • Conforme RGPD</p>
-                </div>
-              </div>
             </div>
           </div>
         )}
 
-        {/* ЭКРАН РЕЗУЛЬТАТА (БЕСПЛАТНЫЙ) */}
+        {/* 📋 ЭКРАН РЕЗУЛЬТАТА - БИЗНЕС ПОДХОД */}
         {step === 'free-result' && (
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <h2 className="text-2xl font-semibold text-slate-800 mb-6">Votre aperçu - Version TEST</h2>
-
-              <div className="bg-slate-50 rounded-lg p-6 mb-6 border border-slate-200">
-                <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">{freeResponse}</p>
+              <h2 className="text-xl font-semibold text-slate-600 mb-4">Résultat du Test (Version Standard)</h2>
+              
+              {/* Сам текст ответа */}
+              <div className="bg-slate-50 rounded-lg p-6 mb-8 border border-slate-200">
+                <p className="text-slate-600 italic">"{freeResponse}"</p>
               </div>
 
-              <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-6 mb-6">
-                <h3 className="font-bold text-slate-800 mb-3">✓ Ce que vous avez reçu (TEST)</h3>
-                <p className="text-sm text-slate-600 mb-4">Simple accusé de réception automatique</p>
-                
-                <h3 className="font-bold text-slate-800 mb-3 mt-4">Ce qui manque pour une réponse professionnelle</h3>
-                <ul className="text-sm text-slate-600 space-y-2">
-                  <li>• Analyse juridique du problème</li>
-                  <li>• Argumentaire de défense complet</li>
-                  <li>• Vocabulaire technique et formel</li>
-                  <li>• Protection contre les recours</li>
-                </ul>
-              </div>
-
-              <div className="bg-gradient-to-r from-slate-50 to-blue-50 border-2 border-slate-300 rounded-xl p-6">
-                <h3 className="font-bold text-slate-800 text-lg mb-4">Réponse complète - 9,90€</h3>
-                
-                <div className="bg-white rounded-lg p-4 mb-4 border-l-4 border-slate-600">
-                  <p className="text-sm text-slate-700 mb-2">
-                    💡 <strong>Lettre officielle prête à l'envoi</strong>
-                  </p>
-                  <p className="text-xs text-slate-600">
-                    Inclut: Références juridiques, ton ferme, et rejet de responsabilité justifié.
-                  </p>
+              {/* Блок Экспертного Совета (Сравнение) */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-100 p-2 rounded-full">
+                    <Star className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-lg mb-2">Analyse de l'expert</h3>
+                    <p className="text-sm text-slate-700 mb-4 leading-relaxed">
+                      Ce message est poli, mais c'est une <strong>réponse d'attente</strong> (passif). Elle ne règle pas le litige.
+                      <br/>
+                      Pour clore le dossier, vous devez passer d'une posture "d'écoute" à une posture "d'autorité".
+                    </p>
+                    
+                    <div className="grid md:grid-cols-2 gap-4 mt-4">
+                      <div className="bg-white p-3 rounded border border-slate-200 opacity-80">
+                        <div className="flex items-center gap-2 mb-1">
+                             <Clock className="w-4 h-4 text-slate-400"/>
+                             <span className="text-xs font-bold text-slate-500 uppercase">Version Gratuite</span>
+                        </div>
+                        <span className="text-sm text-slate-600">"Nous allons regarder..." <br/>(Le client attend et relance)</span>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-green-200 shadow-sm">
+                        <div className="flex items-center gap-2 mb-1">
+                             <FileText className="w-4 h-4 text-green-600"/>
+                             <span className="text-xs font-bold text-green-600 uppercase">Version Payante</span>
+                        </div>
+                        <span className="text-sm text-slate-800">"Conformément au devis..." <br/>(Le dossier est clos)</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              </div>
 
+              <div className="bg-slate-800 text-white rounded-xl p-6 shadow-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-lg">Obtenez la réponse Ferme & Définitive</h3>
+                  <span className="font-bold text-2xl">9,90€</span>
+                </div>
+                <ul className="text-sm text-slate-300 space-y-2 mb-6">
+                  <li className="flex gap-2"><Check className="w-4 h-4 text-green-400"/> Argumentation technique et factuelle</li>
+                  <li className="flex gap-2"><Check className="w-4 h-4 text-green-400"/> Ton professionnel qui impose le respect</li>
+                  <li className="flex gap-2"><Check className="w-4 h-4 text-green-400"/> Objectif : Clore le dossier sans suite</li>
+                </ul>
+                
                 <button
                   onClick={handlePaymentClick}
-                  className="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-4 rounded-lg transition"
+                  className="w-full bg-white text-slate-900 font-bold py-4 rounded-lg hover:bg-slate-100 transition shadow-md"
                 >
-                  Accéder à la réponse complète - 9,90€
+                  Télécharger la réponse complète
                 </button>
               </div>
+
             </div>
             
-            <button onClick={resetForm} className="text-slate-600 hover:text-slate-800 mx-auto block">
-              ← Nouvelle réclamation
+            <button onClick={resetForm} className="text-slate-500 hover:text-slate-700 mx-auto block text-sm">
+              Recommencer le test
             </button>
           </div>
         )}
 
-        {/* ЭКРАН ОПЛАТЫ (ДЕМО) */}
+        {/* ЭКРАН ОПЛАТЫ */}
         {step === 'payment' && (
           <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-6">Accès à la réponse complète</h2>
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6">Dernière étape</h2>
             
             <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-6 text-sm text-yellow-800">
-              <strong>MODE DÉMO:</strong> Simulation. Ajoutez votre lien Lemon Squeezy dans le code.
+              <strong>MODE DÉMO:</strong> Le paiement est simulé.
             </div>
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Votre email (obligatoire pour recevoir le dossier) *
+                Où envoyer le dossier complet ? *
               </label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="nom@exemple.com"
+                placeholder="votre@email.com"
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500"
               />
             </div>
@@ -338,45 +301,37 @@ export default function ReclamationApp() {
             <button
               onClick={handlePaidGeneration}
               disabled={loading}
-              className="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-4 rounded mb-4 disabled:opacity-50 transition"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg mb-4 transition shadow-md"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Simuler le paiement (9,90€)'}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Accéder à la réponse (Simulation 9,90€)'}
             </button>
 
-            <button onClick={() => setStep('free-result')} className="w-full text-slate-600 hover:text-slate-800 py-2">
-              ← Retour
-            </button>
+            <button onClick={() => setStep('free-result')} className="w-full text-slate-500 py-2">Retour</button>
           </div>
         )}
 
-        {/* ЭКРАН ФИНАЛА (ПОСЛЕ ОПЛАТЫ) */}
+        {/* ЭКРАН ФИНАЛА */}
         {step === 'paid-result' && (
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <h2 className="text-2xl font-semibold text-slate-800 mb-6">Votre réponse complète</h2>
-
-              <div className="bg-green-50 border border-green-200 rounded p-4 mb-6 text-sm text-green-800">
-                ✅ Réponse générée avec succès. <br/>
-                <span className="text-xs">Une copie sera envoyée à {email} (Simulation).</span>
+              <div className="flex items-center gap-2 mb-6 text-green-600">
+                <Check className="w-6 h-6" />
+                <h2 className="text-2xl font-semibold text-slate-800">Dossier généré</h2>
               </div>
 
-              <div className="bg-slate-50 rounded-lg p-6 border-2 border-slate-300 mb-4">
-                <p className="text-slate-700 whitespace-pre-wrap leading-relaxed font-serif">{paidResponse}</p>
+              <div className="bg-slate-50 rounded-lg p-8 border border-slate-200 mb-6 shadow-inner">
+                <p className="text-slate-800 whitespace-pre-wrap leading-relaxed font-serif text-justify">{paidResponse}</p>
               </div>
 
               <button
-                onClick={() => {
-                   navigator.clipboard.writeText(paidResponse);
-                   alert('✓ Copié !');
-                }}
-                className="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-3 rounded-lg transition"
+                onClick={() => { navigator.clipboard.writeText(paidResponse); alert('Copié !'); }}
+                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-4 rounded-lg transition shadow-lg flex items-center justify-center gap-2"
               >
-                📋 Copier la réponse
+                📋 Copier le texte
               </button>
+              <p className="text-center text-sm text-slate-500 mt-4">Une copie a été envoyée à {email}</p>
             </div>
-             <button onClick={resetForm} className="text-slate-600 hover:text-slate-800 mx-auto block font-semibold">
-              ← Traiter une nouvelle réclamation
-            </button>
+             <button onClick={resetForm} className="text-slate-500 hover:text-slate-700 mx-auto block">Nouveau dossier</button>
           </div>
         )}
       </div>
