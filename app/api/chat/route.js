@@ -93,4 +93,61 @@ export async function POST(req) {
       return NextResponse.json({ result: "Message reçu" });
     }
 
-    //
+    // 2. ГЕНЕРАЦИЯ ОТВЕТА (AI)
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
+    }
+
+    const systemPrompt = type === 'free' ? PROMPT_FREE : PROMPT_PAID;
+    const maxTokens = type === 'free' ? 300 : 1000;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Situation: ${situation}. Message client: ${complaint}` },
+      ],
+      temperature: 0.7,
+      max_tokens: maxTokens,
+    });
+
+    const generatedText = completion.choices[0].message.content;
+
+    // 3. ОТПРАВКА ЗАКАЗА ВАМ (Mode Test)
+    if (type === 'paid' && process.env.RESEND_API_KEY) {
+      try {
+        await resend.emails.send({
+          from: 'onboarding@resend.dev',
+          to: ADMIN_EMAIL, 
+          subject: `💰 NOUVELLE COMMANDE (${email})`, 
+          html: `
+            <div style="font-family: Arial, sans-serif; color: #333;">
+              <h2 style="color: #2da44e;">Nouveau dossier généré !</h2>
+              <p><strong>Email du client:</strong> ${email}</p>
+              <p><strong>Situation:</strong> ${situation}</p>
+              <hr style="border: 1px solid #eee; margin: 20px 0;" />
+              <h3>Réponse générée :</h3>
+              <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; white-space: pre-wrap;">
+                ${generatedText.replace(/\n/g, '<br>')}
+              </div>
+              <hr style="border: 1px solid #eee; margin: 20px 0;" />
+              <p style="font-size: 12px; color: #666;">
+                Mode Test (Sans domaine) : Ce mail est envoyé à l'admin uniquement. 
+                Le client a vu le texte sur son écran.
+              </p>
+            </div>
+          `
+        });
+        console.log("✅ Order email sent to admin");
+      } catch (emailError) {
+        console.error("❌ Order email error:", emailError);
+      }
+    }
+
+    return NextResponse.json({ result: generatedText });
+
+  } catch (error) {
+    console.error('Error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
