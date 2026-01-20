@@ -120,15 +120,14 @@ export default function ReclamationApp() {
            </div>
         )}
 
-        {/* HEADER - МЕНЕЕ АГРЕССИВНЫЙ */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-8 border border-slate-200 shadow-sm">
             <Shield className="w-3 h-3 text-blue-600"/> Gilet Pare-balles Administratif
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-[#1E293B] mb-8 leading-[1.2] tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-black text-[#1E293B] mb-8 leading-[1.2] tracking-tight text-center">
             Une mauvaise réponse écrite peut <br/> <span className="text-red-600 underline decoration-slate-300 decoration-wavy underline-offset-8">tuer</span> votre entreprise.
           </h1>
-          <p className="text-lg md:text-xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed text-center">
             Gérez les réclamations comme un professionnel. <br/> 
             Protégez vos marges и votre réputation sans aveu de faute.
           </p>
@@ -175,19 +174,17 @@ export default function ReclamationApp() {
           </div>
         )}
 
-        {/* ШАГ 1: СБАЛАНСИРОВАННЫЕ ТРИГГЕРЫ */}
         {step === 'free-result' && (
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700">
             <div className="bg-white rounded-[3rem] shadow-2xl p-10 border border-slate-200">
               <h2 className="text-2xl font-black mb-8 flex items-center gap-4 text-[#1E293B]"><FileText className="w-8 h-8 text-blue-600"/> Ébauche indicative</h2>
               <div className="bg-slate-50 p-10 rounded-[2rem] border-2 border-dashed border-slate-200 mb-12 shadow-inner"><p className="text-slate-500 italic font-bold leading-relaxed text-xl">{freeResponse}</p></div>
               
-              <div className="text-center mb-16">
+              <div className="text-center mb-16 text-center">
                  <h3 className="text-2xl font-black text-[#1E293B] mb-2 uppercase tracking-tight">Protégez votre entreprise</h3>
                  <p className="text-slate-500 font-bold">Comparez les options avant d'envoyer votre réponse.</p>
               </div>
 
-              {/* СБАЛАНСИРОВАННАЯ ТАБЛИЦА */}
               <div className="grid md:grid-cols-3 gap-6 mb-12 items-stretch">
                 <div className="bg-slate-50 border-2 border-slate-200 rounded-[2rem] p-8 flex flex-col transition-all hover:bg-white hover:border-red-200 group">
                    <AlertTriangle className="w-10 h-10 text-slate-400 mb-6 group-hover:text-red-500" />
@@ -212,13 +209,13 @@ export default function ReclamationApp() {
 
                 <div className="bg-[#0F172A] rounded-[2rem] p-8 flex flex-col text-white shadow-2xl border-b-8 border-green-600 relative overflow-hidden transform hover:scale-[1.02] transition-all">
                    <Shield className="w-12 h-12 text-green-500 mb-6" />
-                   <h4 className="font-black text-2xl mb-4 tracking-tight">IA EXPERTE</h4>
+                   <h4 className="font-black text-2xl mb-4 tracking-tight text-white">IA EXPERTE</h4>
                    <ul className="text-xs space-y-4 mb-8 text-slate-300 font-bold leading-relaxed">
                      <li className="flex gap-2"><Check className="w-4 h-4 text-green-500 flex-shrink-0"/> Neutralisation totale</li>
                      <li className="flex gap-2"><Check className="w-4 h-4 text-green-500 flex-shrink-0"/> Ton ferme и pro</li>
                      <li className="flex gap-2"><Check className="w-4 h-4 text-green-500 flex-shrink-0"/> Immédiat (10 sec)</li>
                    </ul>
-                   <div className="mt-auto text-center font-black text-green-400 text-3xl tracking-tighter uppercase">9,90€ <span className="text-[10px] tracking-widest">TTC</span></div>
+                   <div className="mt-auto text-center font-black text-green-400 text-3xl tracking-tighter uppercase text-center">9,90€ <span className="text-[10px] tracking-widest text-green-400/70">TTC</span></div>
                 </div>
               </div>
 
@@ -229,7 +226,6 @@ export default function ReclamationApp() {
           </div>
         )}
 
-        {/* Остальные шаги без изменений в логике */}
         {step === 'payment' && (
           <div className="bg-white rounded-[3rem] shadow-2xl p-12 max-w-xl mx-auto border-t-8 border-green-600">
             <h2 className="font-black text-3xl mb-8 text-[#1E293B] tracking-tight text-center">Réception du dossier</h2>
@@ -238,7 +234,7 @@ export default function ReclamationApp() {
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@entreprise.fr" className="w-full bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl outline-none focus:border-blue-600 text-xl font-bold shadow-inner" />
             </div>
             <button onClick={handlePaymentClick} className="w-full bg-green-600 text-white font-black py-7 rounded-2xl shadow-xl hover:bg-green-500 transition-all text-xl uppercase tracking-widest">Payer 9,90€ и Recevoir</button>
-            <button onClick={() => setStep('form')} className="w-full text-slate-400 text-xs font-black uppercase tracking-widest mt-6 hover:text-slate-600 transition">Retour</button>
+            <button onClick={() => setStep('form')} className="w-full text-slate-400 text-xs font-black uppercase tracking-widest mt-6 hover:text-slate-600 transition text-center">Retour</button>
           </div>
         )}
 
@@ -252,37 +248,36 @@ export default function ReclamationApp() {
                </button>
              </div>
 
-             <div className="bg-[#0F172A] text-white rounded-[4rem] p-16 shadow-2xl text-center relative overflow-hidden border-b-8 border-green-600">
+             <div className="bg-[#0F172A] text-white rounded-[4rem] p-16 shadow-2xl text-center relative overflow-hidden border-b-8 border-green-600 text-center">
                 <PartyPopper className="w-24 h-24 text-green-500 mx-auto mb-10 animate-bounce" />
-                <h3 className="text-5xl font-black mb-8 tracking-tighter leading-none">FÉLICITATIONS !<br/>DOSSIER SÉCURISÉ.</h3>
-                <p className="text-slate-400 mb-12 text-2xl font-bold max-w-2xl mx-auto leading-relaxed italic">Un problème de moins. Reprenez le contrôle de vos chantiers.</p>
+                <h3 className="text-5xl font-black mb-8 tracking-tighter leading-none text-white">FÉLICITATIONS !<br/>DOSSIER SÉCURISÉ.</h3>
+                <p className="text-slate-400 mb-12 text-2xl font-bold max-w-2xl mx-auto leading-relaxed italic text-center">Un problème de moins. Reprenez le contrôle de vos chantiers.</p>
                 <button onClick={() => window.location.href = '/'} className="bg-green-600 text-white font-black py-7 px-14 rounded-full transition-all transform hover:scale-105 shadow-[0_25px_60px_rgba(34,197,94,0.4)] flex items-center justify-center gap-6 mx-auto uppercase tracking-widest text-lg">
-                  Nouveau Dossier <ArrowRight className="w-8 h-8" />
+                  Nouveau Dossier <ArrowRight className="w-8 h-8 text-white" />
                 </button>
              </div>
            </div>
         )}
 
-        <div className="mt-28 pt-12 border-t-2 border-slate-200 text-center">
-            <p className="font-black text-[#1E293B] text-2xl mb-2 tracking-tighter uppercase">Réponse Sécurisée</p>
-            <p className="text-slate-400 text-[10px] mb-12 font-black uppercase tracking-[0.3em]">Protection Administrative • Zero Data Log</p>
-            <div className="flex flex-wrap justify-center items-center gap-8 mb-16">
+        <div className="mt-28 pt-12 border-t-2 border-slate-200 text-center text-center">
+            <p className="font-black text-[#1E293B] text-2xl mb-2 tracking-tighter uppercase text-center">Réponse Sécurisée</p>
+            <p className="text-slate-400 text-[10px] mb-12 font-black uppercase tracking-[0.3em] text-center">Protection Administrative • Zero Data Log</p>
+            <div className="flex flex-wrap justify-center items-center gap-8 mb-16 text-center">
                 <span className="flex items-center gap-3 px-6 py-3 bg-white rounded-full border border-slate-200 shadow-sm text-[10px] font-black uppercase tracking-widest text-slate-500"><Lock className="w-4 h-4 text-blue-600"/> Confidentialité</span>
                 <span className="flex items-center gap-3 px-6 py-3 bg-white rounded-full border border-slate-200 shadow-sm text-[10px] font-black uppercase tracking-widest text-slate-500"><Shield className="w-4 h-4 text-blue-600"/> RGPD</span>
             </div>
-            <button onClick={() => setShowSupport(true)} className="text-slate-400 text-xs hover:text-[#1E293B] font-black transition-all flex items-center gap-2 mx-auto uppercase tracking-widest border-b-2 border-transparent hover:border-slate-800 pb-2">
+            <button onClick={() => setShowSupport(true)} className="text-slate-400 text-xs hover:text-[#1E293B] font-black transition-all flex items-center gap-2 mx-auto uppercase tracking-widest border-b-2 border-transparent hover:border-slate-800 pb-2 text-center">
                <MessageSquare className="w-4 h-4"/> Support / Contact
             </button>
         </div>
       </div>
 
-      {/* MODALE SUPPORT */}
       {showSupport && (
         <div className="fixed inset-0 bg-[#0F172A]/90 backdrop-blur-xl flex items-center justify-center p-4 z-50">
            <div className="bg-white rounded-[3.5rem] p-12 w-full max-w-lg shadow-2xl relative border-t-[12px] border-blue-600">
               <button onClick={() => setShowSupport(false)} className="absolute top-10 right-10 text-slate-300 hover:text-red-600 text-3xl font-black transition-all">✕</button>
               <h3 className="font-black text-4xl text-[#1E293B] mb-10 tracking-tight">Support</h3>
-              {supportSent ? (<div className="text-green-600 text-center py-12"><Check className="w-24 h-24 mx-auto mb-8 animate-pulse" /><p className="font-black text-3xl tracking-tight uppercase">Envoyé !</p></div>) : (
+              {supportSent ? (<div className="text-green-600 text-center py-12 text-center"><Check className="w-24 h-24 mx-auto mb-8 animate-pulse text-green-600" /><p className="font-black text-3xl tracking-tight uppercase text-green-600">Envoyé !</p></div>) : (
                 <form onSubmit={async (e) => { e.preventDefault(); setLoading(true); await fetch('/api/chat', { method: 'POST', body: JSON.stringify({ type: 'feedback', name: supportName, email: supportEmail, message: supportMessage }) }); setSupportSent(true); setTimeout(() => setShowSupport(false), 2000); }} className="space-y-6">
                   <input required placeholder="Nom / Entreprise" className="w-full bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl focus:border-blue-600 outline-none font-bold text-lg" value={supportName} onChange={e => setSupportName(e.target.value)} />
                   <input required type="email" placeholder="Email de contact" className="w-full bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl focus:border-blue-600 outline-none font-bold text-lg" value={supportEmail} onChange={e => setSupportEmail(e.target.value)} />
@@ -294,13 +289,5 @@ export default function ReclamationApp() {
         </div>
       )}
     </div>
-  );
-}
-
-function ArrowRight({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-    </svg>
   );
 }
