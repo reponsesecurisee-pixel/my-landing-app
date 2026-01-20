@@ -453,7 +453,7 @@ export default function ReclamationApp() {
                 📋 Copier le texte
               </button>
               
-              {/* ВОТ ТУТ МЫ ИЗМЕНИЛИ ТЕКСТ НА БОЛЕЕ УМНЫЙ */}
+              {/* СООБЩЕНИЕ О ВАЛИДАЦИИ */}
               <p className="text-center text-sm text-slate-500 mt-4 bg-green-50 p-2 rounded border border-green-100">
                  <Check className="w-3 h-3 inline mr-1 text-green-600"/>
                  Une copie vous sera transmise par email <strong>après validation des services</strong>.
