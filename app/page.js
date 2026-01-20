@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Check, AlertCircle, Loader2, Shield, Briefcase, Scale, AlertTriangle, XCircle, Mail, FileText, BarChart3, MessageSquare } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Shield, Briefcase, Scale, AlertTriangle, XCircle, Mail, FileText, BarChart3, MessageSquare, Lock, Download } from 'lucide-react';
 
 // 👇 ВАША ССЫЛКА LEMON SQUEEZY
 const LEMON_SQUEEZY_LINK = "https://reponse-securisee.lemonsqueezy.com/checkout/buy/d4e3b498-d99e-4d28-bb39-af9e1ef5de6b"; 
@@ -130,8 +130,7 @@ export default function ReclamationApp() {
     setError('');
     
     if (hasUsedFree && !isAdmin) {
-      setError('Vous avez déjà utilisé votre test gratuit. Veuillez passer à la version complète.');
-      return;
+      return; 
     }
 
     if (!complaint || !situation) {
@@ -151,9 +150,17 @@ export default function ReclamationApp() {
     }
   };
 
+  const handleDirectBuy = () => {
+    if (!complaint || !situation) {
+      setError('Veuillez décrire la situation avant de continuer.');
+      return;
+    }
+    setStep('payment');
+  };
+
   const handlePaymentClick = () => {
     if (!email || !email.includes('@')) {
-       alert("Veuillez entrer votre email avant de payer pour recevoir le dossier.");
+       alert("Veuillez entrer votre email pour recevoir le dossier.");
        return;
     }
 
@@ -164,7 +171,7 @@ export default function ReclamationApp() {
     if (LEMON_SQUEEZY_LINK && LEMON_SQUEEZY_LINK.includes('http')) {
         window.location.href = LEMON_SQUEEZY_LINK;
     } else {
-        alert("Lien de paiement manquant");
+        alert("Lien de commande manquant");
     }
   };
 
@@ -180,27 +187,23 @@ export default function ReclamationApp() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 font-sans text-slate-800 flex flex-col">
       <div className="max-w-4xl mx-auto flex-grow w-full">
         
-        {/* АДМИН ПАНЕЛЬ (Видна только Вам) */}
+        {/* АДМИН ПАНЕЛЬ */}
         {isAdmin && (
            <div className="bg-slate-800 text-white p-4 rounded-lg mb-8 shadow-lg border border-slate-600">
              <div className="flex items-center gap-2 mb-3 border-b border-slate-600 pb-2">
                 <BarChart3 className="w-5 h-5 text-green-400" />
                 <span className="font-bold">ADMIN DASHBOARD</span>
-                <span className="text-xs bg-green-600 px-2 py-0.5 rounded text-white ml-auto">Actif</span>
+                <span className="text-xs bg-green-600 px-2 py-0.5 rounded text-white ml-auto">Mode Test Actif</span>
              </div>
              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                 <a href="https://vercel.com/dashboard" target="_blank" className="bg-slate-700 p-3 rounded hover:bg-slate-600 transition text-center">
                     <span className="block font-bold text-lg">👁️ Trafic</span>
-                    <span className="text-xs text-slate-300">Voir sur Vercel</span>
+                    <span className="text-xs text-slate-300">Logs Vercel</span>
                 </a>
                 <a href="https://app.lemonsqueezy.com/orders" target="_blank" className="bg-slate-700 p-3 rounded hover:bg-slate-600 transition text-center">
-                    <span className="block font-bold text-lg">💰 Ventes</span>
-                    <span className="text-xs text-slate-300">Voir Lemon Squeezy</span>
+                    <span className="block font-bold text-lg">📦 Commandes</span>
+                    <span className="text-xs text-slate-300">Lemon Squeezy</span>
                 </a>
-                <div className="bg-slate-700 p-3 rounded text-center opacity-70">
-                    <span className="block font-bold text-lg">🔓 Tests</span>
-                    <span className="text-xs text-slate-300">Illimités pour vous</span>
-                </div>
              </div>
            </div>
         )}
@@ -273,33 +276,37 @@ export default function ReclamationApp() {
                 </select>
               </div>
 
-              <button
-                onClick={handleSubmitFree}
-                disabled={loading || (hasUsedFree && !isAdmin)}
-                className="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Génération...
-                  </>
-                ) : (hasUsedFree && !isAdmin) ? (
-                  'Test gratuit déjà utilisé'
-                ) : (
-                  'Générer une ébauche GRATUITE'
-                )}
-              </button>
-              
-              {hasUsedFree && !isAdmin && (
-                <div className="text-center text-sm text-red-600 mt-2">
-                   Limite atteinte (1 test par personne). Veuillez utiliser la version complète.
+              {/* ЛОГИКА КНОПОК */}
+              {hasUsedFree && !isAdmin ? (
+                // 🔴 Если тест использован
+                <div className="space-y-3">
+                  <div className="bg-orange-50 text-orange-800 text-sm p-3 rounded flex items-center gap-2">
+                    <Lock className="w-4 h-4"/>
+                    Test gratuit déjà utilisé. Passez à la version complète pour traiter ce cas.
+                  </div>
+                  <button
+                    onClick={handleDirectBuy}
+                    className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-lg transition shadow-lg flex items-center justify-center gap-2"
+                  >
+                    Obtenir ma réponse sécurisée (9,90€) →
+                  </button>
                 </div>
+              ) : (
+                // 🟢 Если новый пользователь
+                <button
+                  onClick={handleSubmitFree}
+                  disabled={loading}
+                  className="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-4 rounded-lg transition flex items-center justify-center gap-2"
+                >
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Générer une ébauche GRATUITE'}
+                </button>
               )}
+              
             </div>
           </div>
         )}
 
-        {/* ШАГ 2: РЕЗУЛЬТАТ */}
+        {/* ШАГ 2: РЕЗУЛЬТАТ (Free) */}
         {step === 'free-result' && (
           <div className="space-y-8">
             <div className="bg-white rounded-xl shadow-lg p-8">
@@ -316,6 +323,7 @@ export default function ReclamationApp() {
                 <p className="text-slate-600 text-sm mt-1">Comparatif des options pour sécuriser votre entreprise :</p>
               </div>
 
+              {/* Таблица сравнения */}
               <div className="grid md:grid-cols-3 gap-4 mb-8">
                 {/* Ответить самому */}
                 <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center text-center opacity-70 hover:opacity-100 transition">
@@ -326,7 +334,6 @@ export default function ReclamationApp() {
                    <ul className="text-xs text-slate-600 space-y-2 mb-4 text-left w-full">
                      <li className="flex gap-2"><XCircle className="w-3 h-3 text-red-400"/> Risque d'émotion</li>
                      <li className="flex gap-2"><XCircle className="w-3 h-3 text-red-400"/> Formulations risquées</li>
-                     <li className="flex gap-2"><XCircle className="w-3 h-3 text-red-400"/> Stress inutile</li>
                    </ul>
                    <div className="mt-auto pt-4 border-t w-full">
                      <span className="block text-xs text-slate-500">Coût potentiel</span>
@@ -343,7 +350,6 @@ export default function ReclamationApp() {
                    <ul className="text-xs text-slate-600 space-y-2 mb-4 text-left w-full">
                      <li className="flex gap-2"><Check className="w-3 h-3 text-green-500"/> Sécurité juridique</li>
                      <li className="flex gap-2"><Check className="w-3 h-3 text-green-500"/> Professionnel</li>
-                     <li className="flex gap-2"><AlertCircle className="w-3 h-3 text-orange-400"/> Délais (48h+)</li>
                    </ul>
                    <div className="mt-auto pt-4 border-t w-full">
                      <span className="block text-xs text-slate-500">Coût moyen</span>
@@ -363,55 +369,65 @@ export default function ReclamationApp() {
                    <ul className="text-xs text-slate-700 space-y-2 mb-4 text-left w-full">
                      <li className="flex gap-2"><Check className="w-3 h-3 text-green-600"/> <strong>Immédiat</strong> (10 sec)</li>
                      <li className="flex gap-2"><Check className="w-3 h-3 text-green-600"/> Neutre & Factuel</li>
-                     <li className="flex gap-2"><Check className="w-3 h-3 text-green-600"/> Sans reconnaissance de faute</li>
                    </ul>
                    <div className="mt-auto pt-4 border-t border-slate-300 w-full">
-                     <span className="block text-xs text-slate-500">Prix unique</span>
+                     <span className="block text-xs text-slate-500">Participation</span>
                      <span className="font-bold text-2xl text-green-600">9,90€</span>
                    </div>
                 </div>
               </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4 max-w-md mx-auto">
-                 <label className="block text-sm font-bold text-yellow-800 mb-2">
-                    Votre email (pour recevoir le dossier) *
-                 </label>
-                 <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="votre@email.com"
-                    className="w-full px-4 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-slate-500 bg-white"
-                 />
-              </div>
-
-              <div className="text-center mt-2">
+              
+              {/* Кнопка заказа */}
+              <div className="text-center mt-6">
                 <button
-                  onClick={handlePaymentClick}
+                  onClick={handleDirectBuy}
                   className="w-full md:w-auto px-8 bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-lg transition shadow-xl text-lg flex items-center justify-center gap-3 mx-auto"
                 >
                   <Shield className="w-5 h-5" />
-                  Sécuriser ma réponse maintenant - 9,90€
+                  Obtenir ma réponse sécurisée - 9,90€
                 </button>
-                <p className="text-xs text-slate-500 mt-3">
-                  Paiement sécurisé • Reçu immédiat • Satisfait ou remboursé
-                </p>
               </div>
 
             </div>
             
             <button onClick={resetForm} className="text-slate-500 hover:text-slate-700 mx-auto block text-sm">
-              Recommencer le test
+              Recommencer
             </button>
           </div>
         )}
 
-        {/* ШАГ 3: ЗАГРУЗКА ПОСЛЕ ОПЛАТЫ */}
+        {/* ШАГ 3: ВВОД EMAIL И ЗАКАЗ */}
         {step === 'payment' && (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-             <Loader2 className="w-12 h-12 animate-spin text-slate-800 mx-auto mb-4" />
-             <h2 className="text-xl font-bold text-slate-800">Paiement validé !</h2>
-             <p className="text-slate-600">Génération de votre dossier complet en cours...</p>
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6">Dernière étape</h2>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-6 text-sm text-yellow-800">
+              <strong>Sécurisation du dossier :</strong> Veuillez renseigner votre email pour recevoir le document final.
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Votre email professionnel *
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="votre@email.com"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500"
+              />
+            </div>
+
+            <button
+              onClick={handlePaymentClick}
+              disabled={loading}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg mb-4 transition shadow-md"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Valider et recevoir le dossier (9,90€)'}
+            </button>
+
+            <button onClick={() => setStep('form')} className="w-full text-slate-500 py-2">Retour</button>
           </div>
         )}
 
