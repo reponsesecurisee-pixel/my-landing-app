@@ -1,43 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Check, AlertCircle, Loader2, Shield, Briefcase, Star, Clock, FileText } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Shield, Briefcase, Star, Mail, FileText } from 'lucide-react';
 
 // 👇 СЮДА ВСТАВИТЬ ССЫЛКУ LEMON SQUEEZY
 const LEMON_SQUEEZY_LINK = ""; 
-
-// 🔴 ПРОМПТ БЕСПЛАТНЫЙ (Вежливый "режим ожидания")
-const PROMPT_FREE = `Tu es un assistant administratif poli et courtois.
-Ta mission est de rédiger un ACCUSÉ DE RÉCEPTION D'ATTENTE.
-RÈGLES :
-* Ton objectif est de temporiser (gagner du temps) sans énerver le client.
-* Remercie pour le message de façon professionnelle.
-* Dis simplement : "Nous avons bien pris en compte votre remarque concernant [sujet]. Nous allons transmettre les éléments à l'équipe technique pour analyse. Nous reviendrons vers vous une fois les vérifications effectuées."
-* Ne donne AUCUN délai précis.
-* Ne prends AUCUN engagement, ni refus, ni acceptation. Juste "on regarde".`;
-
-// 🟢 ПРОМПТ ПЛАТНЫЙ (Ваш строгий оригинал)
-const PROMPT_PAID = `Tu es un expert juridique senior spécialisé dans la gestion des litiges du bâtiment et des services.
-Ta mission est de rédiger une réponse OFFICIELLE, DÉTAILLÉE et STRATÉGIQUE.
-
-IMPORTANT - INTÉGRATION DES DÉTAILS :
-* Analyse le message du client et INTÈGRE directement les détails spécifiques
-* NE JAMAIS utiliser de placeholders comme [date], [sujet], [nom]
-* Si une information manque, utilise une formulation neutre générique
-* La réponse doit être DIRECTEMENT utilisable sans modification
-
-STRUCTURE OBLIGATOIRE :
-1. "Objet : Réponse à votre signalement" (Sans crochets)
-2. Formule d'appel formelle.
-3. Corps de la lettre : Rappel factuel, Analyse technique/juridique (vocabulaire soutenu), Rejet motivé de la demande (pas d'indemnisation).
-4. Ouverture procédurale stricte.
-5. Formule de politesse très formelle.
-
-TON :
-* Professionnel, courtois mais ferme.
-* Juridique et "Corporate".
-* Ne JAMAIS s'excuser.
-* Longueur : 15-20 lignes minimum.`;
 
 export default function ReclamationApp() {
   const [step, setStep] = useState('form');
@@ -49,16 +16,21 @@ export default function ReclamationApp() {
   const [paidResponse, setPaidResponse] = useState('');
   const [error, setError] = useState('');
   
-  // Отключили ограничения для теста
   useEffect(() => {}, []);
   const markFreeAsUsed = () => {};
 
-  const callOpenAI = async (systemPrompt, userMessage) => {
+  // Функция теперь отправляет тип запроса ('free' или 'paid')
+  const callOpenAI = async (type, userMessage, userEmail = null) => {
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemPrompt, userMessage }),
+        body: JSON.stringify({ 
+          type: type, // <-- Мы говорим серверу, какой промпт использовать
+          complaint: userMessage, // Передаем жалобу
+          situation: situation, // Передаем ситуацию
+          email: userEmail 
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Erreur API');
@@ -77,8 +49,9 @@ export default function ReclamationApp() {
     }
     setLoading(true);
     try {
-      const response = await callOpenAI(PROMPT_FREE, `Situation: ${situation}. Message client: ${complaint}`);
-      setFreeResponse(response);
+      // Запрашиваем тип 'free'
+      const result = await callOpenAI('free', complaint);
+      setFreeResponse(result);
       markFreeAsUsed(); 
       setStep('free-result');
     } catch (err) {
@@ -103,9 +76,9 @@ export default function ReclamationApp() {
     }
     setLoading(true);
     try {
-      const fullMessage = `Situation: ${situation}. Message client: ${complaint}. (Email client: ${email})`;
-      const response = await callOpenAI(PROMPT_PAID, fullMessage);
-      setPaidResponse(response);
+      // Запрашиваем тип 'paid'
+      const result = await callOpenAI('paid', complaint, email);
+      setPaidResponse(result);
       setStep('paid-result');
     } catch (err) {
       setError('Une erreur technique est survenue.');
@@ -127,10 +100,10 @@ export default function ReclamationApp() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8 pt-8">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4 leading-tight">
-            Gérez les réclamations abusives sans perdre votre calme
+            Gérez les réclamations sans stress
           </h1>
           <p className="text-slate-600 text-base md:text-lg mb-3 max-w-3xl mx-auto">
-            Obtenez une réponse professionnelle, ferme et factuelle pour clore les discussions stériles.
+            Obtenez une première réponse neutre gratuitement, ou un modèle complet pour traiter le dossier.
           </p>
         </div>
 
@@ -148,19 +121,19 @@ export default function ReclamationApp() {
                 <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-2">
                   <Shield className="w-6 h-6 text-slate-700" />
                 </div>
-                <div className="text-xs font-semibold text-slate-700">Protection image</div>
+                <div className="text-xs font-semibold text-slate-700">Sécurité</div>
               </div>
               <div className="flex flex-col items-center">
                 <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-2">
                   <Briefcase className="w-6 h-6 text-slate-700" />
                 </div>
-                <div className="text-xs font-semibold text-slate-700">Ton expert</div>
+                <div className="text-xs font-semibold text-slate-700">Professionnel</div>
               </div>
               <div className="flex flex-col items-center">
                 <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-2">
                   <Check className="w-6 h-6 text-slate-700" />
                 </div>
-                <div className="text-xs font-semibold text-slate-700">Sans faute</div>
+                <div className="text-xs font-semibold text-slate-700">Rapide</div>
               </div>
             </div>
 
@@ -197,51 +170,49 @@ export default function ReclamationApp() {
                 disabled={loading}
                 className="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-4 rounded-lg transition flex items-center justify-center gap-2"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Générer réponse TEST'}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Générer une ébauche GRATUITE'}
               </button>
             </div>
           </div>
         )}
 
-        {/* 📋 ЭКРАН РЕЗУЛЬТАТА - БИЗНЕС ПОДХОД */}
+        {/* 📋 ЭКРАН РЕЗУЛЬТАТА - ВАШ ВАРИАНТ (Эскиз) */}
         {step === 'free-result' && (
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <h2 className="text-xl font-semibold text-slate-600 mb-4">Résultat du Test (Version Standard)</h2>
+              <h2 className="text-xl font-semibold text-slate-600 mb-4">Votre ébauche de réponse (Draft)</h2>
               
               {/* Сам текст ответа */}
               <div className="bg-slate-50 rounded-lg p-6 mb-8 border border-slate-200">
-                <p className="text-slate-600 italic">"{freeResponse}"</p>
+                <p className="text-slate-600 italic whitespace-pre-wrap">{freeResponse}</p>
               </div>
 
-              {/* Блок Экспертного Совета (Сравнение) */}
+              {/* СРАВНЕНИЕ (UPSALE) */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
                 <div className="flex items-start gap-3">
                   <div className="bg-blue-100 p-2 rounded-full">
                     <Star className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-800 text-lg mb-2">Analyse de l'expert</h3>
+                    <h3 className="font-bold text-slate-800 text-lg mb-2">Ceci est une ébauche indicative.</h3>
                     <p className="text-sm text-slate-700 mb-4 leading-relaxed">
-                      Ce message est poli, mais c'est une <strong>réponse d'attente</strong> (passif). Elle ne règle pas le litige.
-                      <br/>
-                      Pour clore le dossier, vous devez passer d'une posture "d'écoute" à une posture "d'autorité".
+                      Pour traiter ce litige efficacement, vous avez besoin d'une réponse complète qui intègre les détails spécifiques sans placeholders.
                     </p>
                     
                     <div className="grid md:grid-cols-2 gap-4 mt-4">
                       <div className="bg-white p-3 rounded border border-slate-200 opacity-80">
                         <div className="flex items-center gap-2 mb-1">
-                             <Clock className="w-4 h-4 text-slate-400"/>
+                             <Mail className="w-4 h-4 text-slate-400"/>
                              <span className="text-xs font-bold text-slate-500 uppercase">Version Gratuite</span>
                         </div>
-                        <span className="text-sm text-slate-600">"Nous allons regarder..." <br/>(Le client attend et relance)</span>
+                        <span className="text-sm text-slate-600">Orientation générale, synthétique.</span>
                       </div>
                       <div className="bg-white p-3 rounded border border-green-200 shadow-sm">
                         <div className="flex items-center gap-2 mb-1">
                              <FileText className="w-4 h-4 text-green-600"/>
-                             <span className="text-xs font-bold text-green-600 uppercase">Version Payante</span>
+                             <span className="text-xs font-bold text-green-600 uppercase">Version Complète</span>
                         </div>
-                        <span className="text-sm text-slate-800">"Conformément au devis..." <br/>(Le dossier est clos)</span>
+                        <span className="text-sm text-slate-800">Réponse prête à l'envoi, détails intégrés, zéro faute.</span>
                       </div>
                     </div>
                   </div>
@@ -250,13 +221,13 @@ export default function ReclamationApp() {
 
               <div className="bg-slate-800 text-white rounded-xl p-6 shadow-lg">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-lg">Obtenez la réponse Ferme & Définitive</h3>
+                  <h3 className="font-bold text-lg">Obtenez la réponse Complète</h3>
                   <span className="font-bold text-2xl">9,90€</span>
                 </div>
                 <ul className="text-sm text-slate-300 space-y-2 mb-6">
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-green-400"/> Argumentation technique et factuelle</li>
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-green-400"/> Ton professionnel qui impose le respect</li>
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-green-400"/> Objectif : Clore le dossier sans suite</li>
+                  <li className="flex gap-2"><Check className="w-4 h-4 text-green-400"/> Prête à envoyer (Copier-Coller)</li>
+                  <li className="flex gap-2"><Check className="w-4 h-4 text-green-400"/> Détails du chantier intégrés</li>
+                  <li className="flex gap-2"><Check className="w-4 h-4 text-green-400"/> Ton professionnel et sécurisant</li>
                 </ul>
                 
                 <button
