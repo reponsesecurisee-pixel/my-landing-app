@@ -6,10 +6,11 @@ import { Resend } from 'resend';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ВАША ПОЧТА (на которую будут приходить копии заказов)
+// ВАША ПОЧТА (сюда будут приходить все письма, пока нет домена)
 const ADMIN_EMAIL = 'reponsesecurisee@gmail.com';
 
-// --- ПРОМПТЫ ---
+// --- ПРОМПТЫ (ИНСТРУКЦИИ) ---
+
 const PROMPT_FREE = `Tu es un assistant spécialisé dans la rédaction de réponses professionnelles à des réclamations clients en France.
 Ta mission est de proposer une première ébauche de réponse, à titre indicatif.
 RÈGLES STRICTES :
@@ -60,14 +61,14 @@ IMPORTANT :
 * Varie les formulations à chaque génération
 * Intègre les détails spécifiques du cas sans utiliser de crochets`;
 
-// --- ОСНОВНАЯ ЛОГИКА ---
+// --- ЛОГИКА СЕРВЕРА ---
 
 export async function POST(req) {
   try {
     const body = await req.json();
     const { type, email, message, name, complaint, situation } = body;
 
-    // 1. ПОДДЕРЖКА
+    // 1. ОБРАБОТКА ПОДДЕРЖКИ (Feedback)
     if (type === 'feedback') {
       if (process.env.RESEND_API_KEY) {
         try {
@@ -84,67 +85,12 @@ export async function POST(req) {
               <p>${message}</p>
             `
           });
+          console.log("✅ Support email sent");
         } catch (err) {
-          console.error("❌ Erreur envoi support:", err);
+          console.error("❌ Support email error:", err);
         }
       }
       return NextResponse.json({ result: "Message reçu" });
     }
 
-    // 2. ГЕНЕРАЦИЯ AI
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
-    }
-
-    const systemPrompt = type === 'free' ? PROMPT_FREE : PROMPT_PAID;
-    const maxTokens = type === 'free' ? 300 : 1000;
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `Situation: ${situation}. Message client: ${complaint}` },
-      ],
-      temperature: 0.7,
-      max_tokens: maxTokens,
-    });
-
-    const generatedText = completion.choices[0].message.content;
-
-    // 3. ОТПРАВКА КОПИИ ЗАКАЗА ВАМ
-    if (type === 'paid' && process.env.RESEND_API_KEY) {
-      try {
-        await resend.emails.send({
-          from: 'onboarding@resend.dev',
-          to: ADMIN_EMAIL, 
-          subject: `💰 NOUVELLE COMMANDE (${email})`, 
-          html: `
-            <div style="font-family: Arial, sans-serif; color: #333;">
-              <h2 style="color: #2da44e;">Nouveau dossier généré !</h2>
-              <p><strong>Email du client:</strong> ${email}</p>
-              <p><strong>Situation:</strong> ${situation}</p>
-              <hr style="border: 1px solid #eee; margin: 20px 0;" />
-              <h3>Réponse générée :</h3>
-              <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; white-space: pre-wrap;">
-                ${generatedText.replace(/\n/g, '<br>')}
-              </div>
-              <hr style="border: 1px solid #eee; margin: 20px 0;" />
-              <p style="font-size: 12px; color: #666;">
-                Mode Test (Sans domaine) : Ce mail est envoyé à l'admin uniquement. 
-                Le client a vu le texte sur son écran.
-              </p>
-            </div>
-          `
-        });
-      } catch (emailError) {
-        console.error("❌ Erreur envoi email:", emailError);
-      }
-    }
-
-    return NextResponse.json({ result: generatedText });
-
-  } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-  }
-}
+    //
