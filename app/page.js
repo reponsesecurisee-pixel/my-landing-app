@@ -6,56 +6,42 @@ import { Check, AlertCircle, Loader2, Shield, FileCheck } from 'lucide-react';
 // 👇 СЮДА ВСТАВИТЬ ССЫЛКУ LEMON SQUEEZY (когда создадите товар)
 const LEMON_SQUEEZY_LINK = ""; 
 
-const PROMPT_FREE = `Tu es un assistant spécialisé dans la rédaction de réponses professionnelles à des réclamations clients en France.
-Ta mission est de proposer une première ébauche de réponse, à titre indicatif.
-RÈGLES STRICTES :
-* Ne jamais reconnaître une faute, une erreur ou une responsabilité
-* Ne jamais présenter d'excuses ou exprimer des regrets
-* Ne jamais proposer de remboursement, de compensation ou de geste commercial
-* Ne pas entrer dans des formulations détaillées ou définitives
-OBJECTIF :
-* Montrer un ton professionnel, calme et maîtrisé
-* Donner une orientation générale de réponse
-* Rester volontairement synthétique et non exhaustif
-STRUCTURE :
-1. Accusé de réception neutre
-2. Prise en compte générale de la demande
-3. Indication qu'un échange complémentaire permettrait d'aller plus loin
-Longueur : 4 à 6 lignes maximum.`;
+// 🔴 ПРОМПТ БЕСПЛАТНЫЙ (Коротко и сухо)
+const PROMPT_FREE = `Tu es un assistant administratif basique.
+Ta mission est de rédiger un simple ACCUSÉ DE RÉCEPTION.
+RÈGLES :
+* Fais très COURT (2 ou 3 phrases maximum).
+* Dis seulement : "Nous avons bien reçu votre réclamation concernant [sujet]. Nous allons étudier votre dossier. Sans réponse de notre part sous 15 jours, considérez le dossier clos."
+* Sois froid et robotique.
+* Ne donne AUCUNE explication, AUCUNE excuse, AUCUN détail.`;
 
-const PROMPT_PAID = `Tu es un assistant expert en rédaction de réponses professionnelles à des réclamations clients pour des entreprises de services en France.
-Ta mission est de rédiger une réponse écrite COMPLÈTE, PRÊTE À ENVOYER, destinée à être utilisée telle quelle par le client.
-RÈGLES IMPÉRATIVES :
-* Ne jamais reconnaître une faute, une erreur ou une responsabilité, explicitement ou implicitement
-* Ne jamais présenter d'excuses ou exprimer des regrets
-* Ne jamais promettre de remboursement, de compensation ou de geste commercial
-* Ne pas valider les reproches du client
-* Utiliser un registre professionnel, factuel et posé
+// 🟢 ПРОМПТ ПЛАТНЫЙ (Ваш обновленный, строгий)
+const PROMPT_PAID = `Tu es un expert juridique senior spécialisé dans la gestion des litiges du bâtiment et des services.
+Ta mission est de rédiger une réponse OFFICIELLE, DÉTAILLÉE et STRATÉGIQUE.
+
 IMPORTANT - INTÉGRATION DES DÉTAILS :
-* Analyse le message du client et INTÈGRE directement les détails spécifiques :
-  - Type de travaux/service mentionné
-  - Période ou date évoquée
-  - Nature précise de la réclamation
+* Analyse le message du client et INTÈGRE directement les détails spécifiques
 * NE JAMAIS utiliser de placeholders comme [date], [sujet], [nom]
 * Si une information manque, utilise une formulation neutre générique
 * La réponse doit être DIRECTEMENT utilisable sans modification
-TON ET STYLE :
-* Français professionnel, courtois mais ferme
-* Formulations polies et institutionnelles
-* Absence totale de familiarité ou d'empathie émotionnelle
-* Posture calme, maîtrisée et non défensive
-STRUCTURE ATTENDUE :
-1. Formule d'introduction polie et accusé de réception
-2. Prise en compte des éléments mentionnés, sans validation des reproches
-3. Position neutre indiquant que les éléments ne permettent pas, à ce stade, d'établir une responsabilité
-4. Rappel du cadre habituel d'analyse (échange factuel / examen contradictoire)
-5. Proposition encadrée de poursuite de l'échange, sans engagement
-6. Formule de conclusion polie`;
+
+STRUCTURE OBLIGATOIRE :
+1. "Objet : Réponse à votre signalement" (Sans crochets)
+2. Formule d'appel formelle.
+3. Corps de la lettre : Rappel factuel, Analyse technique/juridique (vocabulaire soutenu), Rejet motivé de la demande (pas d'indemnisation).
+4. Ouverture procédurale stricte.
+5. Formule de politesse très formelle.
+
+TON :
+* Professionnel, courtois mais ferme.
+* Juridique et "Corporate".
+* Ne JAMAIS s'excuser.
+* Longueur : 15-20 lignes minimum.`;
 
 export default function ReclamationApp() {
   const [step, setStep] = useState('form');
   const [complaint, setComplaint] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(''); // Email собираем только для платной
   const [situation, setSituation] = useState('');
   const [loading, setLoading] = useState(false);
   const [freeResponse, setFreeResponse] = useState('');
@@ -64,6 +50,7 @@ export default function ReclamationApp() {
   const [hasUsedFree, setHasUsedFree] = useState(false);
 
   useEffect(() => {
+    // Проверка при загрузке: использовал ли пользователь бесплатную версию
     if (typeof window !== 'undefined') {
       const localUsed = localStorage.getItem('used_free_test');
       if (localUsed) {
@@ -73,6 +60,7 @@ export default function ReclamationApp() {
   }, []);
 
   const markFreeAsUsed = () => {
+    // Записываем в память браузера, что тест использован
     localStorage.setItem('used_free_test', 'true');
     setHasUsedFree(true);
   };
@@ -102,11 +90,13 @@ export default function ReclamationApp() {
   const handleSubmitFree = async () => {
     setError('');
     
+    // Для бесплатного теста Email НЕ НУЖЕН
     if (!complaint || !situation) {
       setError('Veuillez remplir tous les champs obligatoires.');
       return;
     }
 
+    // Проверка на повторное использование (Ограничение 1 раз)
     if (hasUsedFree) {
       setError('Vous avez déjà utilisé votre test gratuit. Pour obtenir une réponse complète, procédez au paiement de 9,90€.');
       return;
@@ -116,7 +106,7 @@ export default function ReclamationApp() {
     try {
       const response = await callOpenAI(PROMPT_FREE, `Situation: ${situation}. Message client: ${complaint}`);
       setFreeResponse(response);
-      markFreeAsUsed();
+      markFreeAsUsed(); // Блокируем повторное использование
       setStep('free-result');
     } catch (err) {
       console.error('Error:', err);
@@ -135,13 +125,18 @@ export default function ReclamationApp() {
   };
 
   const handlePaidGeneration = async () => {
-    if (!email) {
-      setError('Veuillez saisir votre email.');
+    // ОБЯЗАТЕЛЬНАЯ проверка Email для платной версии
+    if (!email || !email.includes('@')) {
+      setError('Veuillez saisir une adresse email valide pour recevoir votre dossier.');
       return;
     }
+    
     setLoading(true);
     try {
-      const response = await callOpenAI(PROMPT_PAID, `Situation: ${situation}. Message client: ${complaint}`);
+      // Здесь мы передаем email в промпт или просто сохраняем его (в будущем можно подключить отправку)
+      const fullMessage = `Situation: ${situation}. Message client: ${complaint}. (Email client: ${email})`;
+      
+      const response = await callOpenAI(PROMPT_PAID, fullMessage);
       setPaidResponse(response);
       setStep('paid-result');
     } catch (err) {
@@ -154,6 +149,7 @@ export default function ReclamationApp() {
   const resetForm = () => {
     setStep('form');
     setComplaint('');
+    // Не сбрасываем hasUsedFree, чтобы запрет остался
     setFreeResponse('');
     setPaidResponse('');
     setError('');
@@ -236,6 +232,7 @@ export default function ReclamationApp() {
                 </select>
               </div>
 
+              {/* Кнопка бесплатного теста */}
               <button
                 onClick={handleSubmitFree}
                 disabled={loading || hasUsedFree}
@@ -286,14 +283,14 @@ export default function ReclamationApp() {
 
               <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-6 mb-6">
                 <h3 className="font-bold text-slate-800 mb-3">✓ Ce que vous avez reçu (TEST)</h3>
-                <p className="text-sm text-slate-600 mb-4">Analyse générale • Orientation de réponse</p>
+                <p className="text-sm text-slate-600 mb-4">Simple accusé de réception automatique</p>
                 
                 <h3 className="font-bold text-slate-800 mb-3 mt-4">Ce qui manque pour une réponse professionnelle</h3>
                 <ul className="text-sm text-slate-600 space-y-2">
-                  <li>• Formulation complète prête à envoyer</li>
-                  <li>• Protection juridique renforcée</li>
-                  <li>• Ton professionnel optimal</li>
-                  <li>• Structure conforme aux standards</li>
+                  <li>• Analyse juridique du problème</li>
+                  <li>• Argumentaire de défense complet</li>
+                  <li>• Vocabulaire technique et formel</li>
+                  <li>• Protection contre les recours</li>
                 </ul>
               </div>
 
@@ -302,10 +299,10 @@ export default function ReclamationApp() {
                 
                 <div className="bg-white rounded-lg p-4 mb-4 border-l-4 border-slate-600">
                   <p className="text-sm text-slate-700 mb-2">
-                    💡 <strong>Moins cher qu'une erreur</strong>
+                    💡 <strong>Lettre officielle prête à l'envoi</strong>
                   </p>
                   <p className="text-xs text-slate-600">
-                    Une consultation avocat : 150-200€ • Une médiation : 500-2000€
+                    Inclut: Références juridiques, ton ferme, et rejet de responsabilité justifié.
                   </p>
                 </div>
 
@@ -335,12 +332,14 @@ export default function ReclamationApp() {
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Votre email (pour recevoir la réponse) *
+                Votre email (obligatoire pour recevoir le dossier) *
               </label>
               <input
                 type="email"
+                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="nom@exemple.com"
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500"
               />
             </div>
@@ -366,11 +365,12 @@ export default function ReclamationApp() {
               <h2 className="text-2xl font-semibold text-slate-800 mb-6">Votre réponse complète</h2>
 
               <div className="bg-green-50 border border-green-200 rounded p-4 mb-6 text-sm text-green-800">
-                ✅ Réponse générée avec succès
+                ✅ Réponse générée avec succès. <br/>
+                <span className="text-xs">Une copie sera envoyée à {email} (Simulation).</span>
               </div>
 
               <div className="bg-slate-50 rounded-lg p-6 border-2 border-slate-300 mb-4">
-                <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">{paidResponse}</p>
+                <p className="text-slate-700 whitespace-pre-wrap leading-relaxed font-serif">{paidResponse}</p>
               </div>
 
               <button
