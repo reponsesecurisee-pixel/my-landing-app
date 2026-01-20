@@ -51,20 +51,11 @@ TON ET STYLE :
 * Posture calme, maîtrisée et non défensive
 STRUCTURE ATTENDUE :
 1. Formule d'introduction polie et accusé de réception
-2. Prise en compte des элементов mentionnés, sans validation des reproches
+2. Prise en compte des éléments mentionnés, sans validation des reproches
 3. Position neutre indiquant que les éléments ne permettent pas, à ce stade, d'établir une responsabilité
 4. Rappel du cadre habituel d'analyse (échange factuel / examen contradictoire)
 5. Proposition encadrée de poursuite de l'échange, sans engagement
 6. Formule de conclusion polie
-
-CONSEILS TACTIQUES (À AJOUTER APRÈS LA LETTRE) :
-3. Recommandez l'envoi impératif en Recommandé avec Accusé de Réception (LRAR) pour figer la preuve.
-4. RÈGLE DES 48H : Conseillez formellement de ne répondre à aucun appel téléphonique du client pendant les 48h suivant l'envoi. Moins vous en dites, moins vous donnez de prises juridiques à la partie adverse. Figez l'échange sur l'écrit pour laisser les émotions retomber.
-
-IMPORTANT - AVERTISSEMENT LÉGAL :
-Ajoute obligatoirement ce texte en gras à la fin :
-"Avertissement : Ce document est un outil d'aide à la rédaction administrative et ne constitue pas un conseil juridique professionnel. En cas de litige grave, consultez un avocat."
-
 IMPORTANT :
 * La réponse doit être prête à l'envoi
 * Varie les formulations à chaque génération
@@ -108,7 +99,7 @@ export async function POST(req) {
     }
 
     const systemPrompt = type === 'free' ? PROMPT_FREE : PROMPT_PAID;
-    const maxTokens = type === 'free' ? 300 : 1200;
+    const maxTokens = type === 'free' ? 300 : 1000;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -160,3 +151,4 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
