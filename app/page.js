@@ -50,8 +50,7 @@ export default function ReclamationApp() {
   const [hasUsedFree, setHasUsedFree] = useState(false);
 
   useEffect(() => {
-    // Я ОТКЛЮЧИЛ ПРОВЕРКУ ПАМЯТИ БРАУЗЕРА
-    // Теперь сайт "забывает", что вы уже были здесь
+    // ОТКЛЮЧЕНА ПРОВЕРКА ДЛЯ ТЕСТОВ
     /*
     if (typeof window !== 'undefined') {
       const localUsed = localStorage.getItem('used_free_test');
@@ -63,7 +62,7 @@ export default function ReclamationApp() {
   }, []);
 
   const markFreeAsUsed = () => {
-    // Я ОТКЛЮЧИЛ ЗАПИСЬ В ПАМЯТЬ
+    // ОТКЛЮЧЕНА ЗАПИСЬ ДЛЯ ТЕСТОВ
     // localStorage.setItem('used_free_test', 'true');
     // setHasUsedFree(true);
   };
@@ -98,8 +97,7 @@ export default function ReclamationApp() {
       return;
     }
 
-    // Я ОТКЛЮЧИЛ БЛОКИРОВКУ
-    /*
+    /* ОТКЛЮЧЕНА БЛОКИРОВКА ДЛЯ ТЕСТОВ
     if (hasUsedFree) {
       setError('Vous avez déjà utilisé votre test gratuit. Pour obtenir une réponse complète, procédez au paiement de 9,90€.');
       return;
@@ -129,7 +127,7 @@ export default function ReclamationApp() {
   };
 
   const handlePaidGeneration = async () => {
-    // ОБЯЗАТЕЛЬНАЯ проверка Email для платной версии
+    // Проверка Email
     if (!email || !email.includes('@')) {
       setError('Veuillez saisir une adresse email valide pour recevoir votre dossier.');
       return;
@@ -359,4 +357,29 @@ export default function ReclamationApp() {
 
               <div className="bg-green-50 border border-green-200 rounded p-4 mb-6 text-sm text-green-800">
                 ✅ Réponse générée avec succès. <br/>
-                <span className="text-xs">
+                <span className="text-xs">Une copie sera envoyée à {email} (Simulation).</span>
+              </div>
+
+              <div className="bg-slate-50 rounded-lg p-6 border-2 border-slate-300 mb-4">
+                <p className="text-slate-700 whitespace-pre-wrap leading-relaxed font-serif">{paidResponse}</p>
+              </div>
+
+              <button
+                onClick={() => {
+                   navigator.clipboard.writeText(paidResponse);
+                   alert('✓ Copié !');
+                }}
+                className="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-3 rounded-lg transition"
+              >
+                📋 Copier la réponse
+              </button>
+            </div>
+             <button onClick={resetForm} className="text-slate-600 hover:text-slate-800 mx-auto block font-semibold">
+              ← Traiter une nouvelle réclamation
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
