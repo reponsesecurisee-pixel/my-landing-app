@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Mail, Check, AlertCircle, Loader2, Shield, FileCheck } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Shield, FileCheck } from 'lucide-react';
 
 // 👇 СЮДА ВСТАВИТЬ ССЫЛКУ LEMON SQUEEZY (когда создадите товар)
 const LEMON_SQUEEZY_LINK = ""; 
@@ -62,7 +62,6 @@ export default function ReclamationApp() {
   const [paidResponse, setPaidResponse] = useState('');
   const [error, setError] = useState('');
   const [hasUsedFree, setHasUsedFree] = useState(false);
-  const [stats, setStats] = useState({ free: 124, paidClicks: 45, paidComplete: 12 }); // Фейковые данные для красоты старта
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -70,26 +69,12 @@ export default function ReclamationApp() {
       if (localUsed) {
         setHasUsedFree(true);
       }
-      
-      const localStats = localStorage.getItem('stats');
-      if (localStats) {
-        setStats(JSON.parse(localStats));
-      }
     }
   }, []);
 
   const markFreeAsUsed = () => {
     localStorage.setItem('used_free_test', 'true');
     setHasUsedFree(true);
-  };
-
-  const updateStats = (type) => {
-    const updated = { ...stats };
-    if (type === 'free') updated.free++;
-    if (type === 'paidClick') updated.paidClicks++;
-    if (type === 'paidComplete') updated.paidComplete++;
-    setStats(updated);
-    localStorage.setItem('stats', JSON.stringify(updated));
   };
 
   const callOpenAI = async (systemPrompt, userMessage) => {
@@ -132,7 +117,6 @@ export default function ReclamationApp() {
       const response = await callOpenAI(PROMPT_FREE, `Situation: ${situation}. Message client: ${complaint}`);
       setFreeResponse(response);
       markFreeAsUsed();
-      updateStats('free');
       setStep('free-result');
     } catch (err) {
       console.error('Error:', err);
@@ -143,7 +127,6 @@ export default function ReclamationApp() {
   };
 
   const handlePaymentClick = () => {
-    updateStats('paidClick');
     if (LEMON_SQUEEZY_LINK && LEMON_SQUEEZY_LINK.includes('http')) {
         window.location.href = LEMON_SQUEEZY_LINK;
     } else {
@@ -160,7 +143,6 @@ export default function ReclamationApp() {
     try {
       const response = await callOpenAI(PROMPT_PAID, `Situation: ${situation}. Message client: ${complaint}`);
       setPaidResponse(response);
-      updateStats('paidComplete');
       setStep('paid-result');
     } catch (err) {
       setError('Une erreur technique est survenue.');
@@ -190,30 +172,6 @@ export default function ReclamationApp() {
           <p className="text-sm text-slate-500 mb-4">
             Pour les artisans et petites entreprises du bâtiment confrontés à des réclamations clients
           </p>
-        </div>
-
-        {/* 📊 БЛОК СТАТИСТИКИ (Вернул его!) */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border border-slate-200">
-          <div className="text-xs font-semibold text-slate-500 mb-2">📊 STATISTIQUES</div>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-blue-600">{stats.free}</div>
-              <div className="text-xs text-slate-600">Tests</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-orange-600">{stats.paidClicks}</div>
-              <div className="text-xs text-slate-600">Intéressés</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-green-600">{stats.paidComplete}</div>
-              <div className="text-xs text-slate-600">Clients</div>
-            </div>
-          </div>
-          {stats.paidClicks > 0 && (
-            <div className="mt-2 text-xs text-center text-slate-500">
-              Conversion: {((stats.paidComplete / stats.paidClicks) * 100).toFixed(1)}%
-            </div>
-          )}
         </div>
 
         {error && (
@@ -303,7 +261,7 @@ export default function ReclamationApp() {
               )}
             </div>
 
-            {/* БЛОК КОНФИДЕНЦИАЛЬНОСТИ (Вернул его!) */}
+            {/* БЛОК КОНФИДЕНЦИАЛЬНОСТИ */}
             <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start gap-2">
                 <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
