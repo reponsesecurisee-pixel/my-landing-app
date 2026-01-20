@@ -279,22 +279,21 @@ export default function ReclamationApp() {
            </div>
         )}
 
-        {/* НИЖНИЙ БЛОК ДОВЕРИЯ (ВАШ ТЕКСТ) */}
-        <div className="mt-12 text-center space-y-4">
-            <div className="flex justify-center items-center gap-2 text-xs text-slate-500 uppercase tracking-widest font-semibold">
+        {/* НИЖНИЙ БЛОК ДОВЕРИЯ (ИСПРАВЛЕННЫЙ - БЕЗ ДУБЛЕЙ) */}
+        <div className="mt-12 pt-8 border-t border-slate-200 text-center">
+            
+            <p className="font-bold text-slate-600 mb-1">Réponse Sécurisée</p>
+            <p className="text-slate-400 text-sm mb-4">Outil d'aide à la rédaction administrative</p>
+
+            <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-xs text-slate-500 uppercase tracking-wider mb-6">
                 <span className="flex items-center gap-1"><Lock className="w-3 h-3"/> Confidentialité garantie</span>
-                <span className="hidden md:inline text-slate-300">•</span>
+                <span>•</span>
                 <span>Aucune donnée stockée</span>
-                <span className="hidden md:inline text-slate-300">•</span>
+                <span>•</span>
                 <span>Conforme RGPD</span>
             </div>
-            
-            <div className="text-slate-400 text-sm">
-                <span className="font-bold text-slate-600 block mb-1">Réponse Sécurisée</span>
-                Outil d'aide à la rédaction • Aucune donnée stockée • Conforme RGPD
-            </div>
 
-            <button onClick={() => setShowSupport(true)} className="text-slate-400 text-xs hover:text-slate-600 underline">
+            <button onClick={() => setShowSupport(true)} className="text-slate-400 text-xs hover:text-slate-600 underline transition">
                 Support / Contact
             </button>
         </div>
@@ -325,4 +324,5 @@ export default function ReclamationApp() {
     </div>
   );
 }
+
 
