@@ -155,7 +155,7 @@ export default function ReclamationApp() {
            </div>
         )}
 
-        {/* ЗАГОЛОВОК (ВЕРНУЛ ВАШ ТЕКСТ) */}
+        {/* ЗАГОЛОВОК */}
         <div className="text-center mb-8 pt-8">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4 leading-tight">
             Une mauvaise réponse écrite peut créer un risque juridique
@@ -232,17 +232,79 @@ export default function ReclamationApp() {
 
         {/* Результат теста */}
         {step === 'free-result' && (
-          <div className="bg-white rounded-xl shadow-lg p-8 space-y-6">
-            <h2 className="font-bold text-xl text-slate-700">Votre ébauche (Brouillon indicatif)</h2>
-            <div className="bg-slate-50 p-6 rounded border border-slate-200"><p className="italic text-slate-600 whitespace-pre-wrap">{freeResponse}</p></div>
-            
-            <div className="bg-yellow-50 p-4 rounded border border-yellow-200 text-sm text-yellow-800 flex gap-3">
-               <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-               <p>Attention : Ce brouillon n'est pas sécurisé. Pour une protection juridique optimale (sans reconnaissance de faute), utilisez la version complète.</p>
-            </div>
+          <div className="space-y-8">
+            <div className="bg-white rounded-xl shadow-lg p-8">
+              <h2 className="font-bold text-xl text-slate-700 mb-4">Votre ébauche (Brouillon indicatif)</h2>
+              <div className="bg-slate-50 p-6 rounded border border-slate-200 mb-8"><p className="italic text-slate-600 whitespace-pre-wrap">{freeResponse}</p></div>
+              
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-slate-800">⚠️ Attention : Une réponse imprécise peut être utilisée contre vous</h3>
+                <p className="text-slate-600 text-sm mt-1">Comparatif des options pour sécuriser votre entreprise :</p>
+              </div>
 
-            <button onClick={handleDirectBuy} className="w-full bg-slate-800 text-white font-bold py-4 rounded-lg hover:bg-slate-900 transition shadow-lg text-lg">
-               Obtenir la réponse sécurisée complète (9,90€)
+              {/* --- ТРИГГЕРЫ: ТАБЛИЦА СРАВНЕНИЯ (ВЕРНУЛАСЬ!) --- */}
+              <div className="grid md:grid-cols-3 gap-4 mb-8">
+                {/* Ответить самому */}
+                <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center text-center opacity-70 hover:opacity-100 transition">
+                   <div className="bg-slate-100 p-3 rounded-full mb-3">
+                     <AlertTriangle className="w-6 h-6 text-slate-500" />
+                   </div>
+                   <h4 className="font-bold text-slate-700 mb-2">Répondre seul</h4>
+                   <ul className="text-xs text-slate-600 space-y-2 mb-4 text-left w-full">
+                     <li className="flex gap-2"><XCircle className="w-3 h-3 text-red-400"/> Risque d'émotion</li>
+                     <li className="flex gap-2"><XCircle className="w-3 h-3 text-red-400"/> Formulations risquées</li>
+                   </ul>
+                   <div className="mt-auto pt-4 border-t w-full">
+                     <span className="block text-xs text-slate-500">Coût potentiel</span>
+                     <span className="font-bold text-red-600">Risque élevé</span>
+                   </div>
+                </div>
+
+                {/* Юрист */}
+                <div className="border border-slate-200 rounded-xl p-4 flex flex-col items-center text-center">
+                   <div className="bg-blue-50 p-3 rounded-full mb-3">
+                     <Scale className="w-6 h-6 text-blue-600" />
+                   </div>
+                   <h4 className="font-bold text-slate-700 mb-2">Avocat</h4>
+                   <ul className="text-xs text-slate-600 space-y-2 mb-4 text-left w-full">
+                     <li className="flex gap-2"><Check className="w-3 h-3 text-green-500"/> Sécurité juridique</li>
+                     <li className="flex gap-2"><Check className="w-3 h-3 text-green-500"/> Professionnel</li>
+                   </ul>
+                   <div className="mt-auto pt-4 border-t w-full">
+                     <span className="block text-xs text-slate-500">Coût moyen</span>
+                     <span className="font-bold text-slate-800">~250€ / heure</span>
+                   </div>
+                </div>
+
+                {/* Наш сервис */}
+                <div className="border-2 border-slate-800 bg-slate-50 rounded-xl p-4 flex flex-col items-center text-center relative shadow-lg transform scale-105 z-10">
+                   <div className="absolute -top-3 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase">
+                     Recommandé
+                   </div>
+                   <div className="bg-slate-800 p-3 rounded-full mb-3">
+                     <Shield className="w-6 h-6 text-white" />
+                   </div>
+                   <h4 className="font-bold text-slate-800 mb-2">Notre IA Experte</h4>
+                   <ul className="text-xs text-slate-700 space-y-2 mb-4 text-left w-full">
+                     <li className="flex gap-2"><Check className="w-3 h-3 text-green-600"/> <strong>Immédiat</strong> (10 sec)</li>
+                     <li className="flex gap-2"><Check className="w-3 h-3 text-green-600"/> Neutre & Factuel</li>
+                   </ul>
+                   <div className="mt-auto pt-4 border-t border-slate-300 w-full">
+                     <span className="block text-xs text-slate-500">Prix unique</span>
+                     <span className="font-bold text-2xl text-green-600">9,90€</span>
+                   </div>
+                </div>
+              </div>
+
+              {/* КНОПКА ПОКУПКИ */}
+              <button onClick={handleDirectBuy} className="w-full bg-slate-800 text-white font-bold py-4 rounded-lg hover:bg-slate-900 transition shadow-lg text-lg flex items-center justify-center gap-3">
+                 <Shield className="w-5 h-5" />
+                 Obtenir la réponse sécurisée complète (9,90€)
+              </button>
+            </div>
+            
+            <button onClick={resetForm} className="text-slate-500 hover:text-slate-700 mx-auto block text-sm">
+              Recommencer
             </button>
           </div>
         )}
@@ -279,7 +341,7 @@ export default function ReclamationApp() {
            </div>
         )}
 
-        {/* НИЖНИЙ БЛОК ДОВЕРИЯ (ИСПРАВЛЕННЫЙ - БЕЗ ДУБЛЕЙ) */}
+        {/* НИЖНИЙ БЛОК ДОВЕРИЯ (АККУРАТНЫЙ) */}
         <div className="mt-12 pt-8 border-t border-slate-200 text-center">
             
             <p className="font-bold text-slate-600 mb-1">Réponse Sécurisée</p>
@@ -324,5 +386,4 @@ export default function ReclamationApp() {
     </div>
   );
 }
-
 
