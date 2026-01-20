@@ -6,11 +6,10 @@ import { Resend } from 'resend';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ВАША ПОЧТА (на которую будут приходить копии заказов и сообщения поддержки)
+// ВАША ПОЧТА (на которую будут приходить копии заказов)
 const ADMIN_EMAIL = 'reponsesecurisee@gmail.com';
 
-// --- ПРОМПТЫ (ИНСТРУКЦИИ ДЛЯ AI) ---
-
+// --- ПРОМПТЫ ---
 const PROMPT_FREE = `Tu es un assistant spécialisé dans la rédaction de réponses professionnelles à des réclamations clients en France.
 Ta mission est de proposer une première ébauche de réponse, à titre indicatif.
 RÈGLES STRICTES :
@@ -68,7 +67,7 @@ export async function POST(req) {
     const body = await req.json();
     const { type, email, message, name, complaint, situation } = body;
 
-    // 1. ОБРАБОТКА СООБЩЕНИЙ ПОДДЕРЖКИ (SUPPORT)
+    // 1. ПОДДЕРЖКА
     if (type === 'feedback') {
       if (process.env.RESEND_API_KEY) {
         try {
@@ -85,7 +84,6 @@ export async function POST(req) {
               <p>${message}</p>
             `
           });
-          console.log("✅ Message support envoyé à l'admin");
         } catch (err) {
           console.error("❌ Erreur envoi support:", err);
         }
@@ -93,7 +91,7 @@ export async function POST(req) {
       return NextResponse.json({ result: "Message reçu" });
     }
 
-    // 2. ГЕНЕРАЦИЯ ОТВЕТА (AI)
+    // 2. ГЕНЕРАЦИЯ AI
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
     }
@@ -106,3 +104,47 @@ export async function POST(req) {
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Situation: ${situation}. Message client: ${complaint}` },
+      ],
+      temperature: 0.7,
+      max_tokens: maxTokens,
+    });
+
+    const generatedText = completion.choices[0].message.content;
+
+    // 3. ОТПРАВКА КОПИИ ЗАКАЗА ВАМ
+    if (type === 'paid' && process.env.RESEND_API_KEY) {
+      try {
+        await resend.emails.send({
+          from: 'onboarding@resend.dev',
+          to: ADMIN_EMAIL, 
+          subject: `💰 NOUVELLE COMMANDE (${email})`, 
+          html: `
+            <div style="font-family: Arial, sans-serif; color: #333;">
+              <h2 style="color: #2da44e;">Nouveau dossier généré !</h2>
+              <p><strong>Email du client:</strong> ${email}</p>
+              <p><strong>Situation:</strong> ${situation}</p>
+              <hr style="border: 1px solid #eee; margin: 20px 0;" />
+              <h3>Réponse générée :</h3>
+              <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; white-space: pre-wrap;">
+                ${generatedText.replace(/\n/g, '<br>')}
+              </div>
+              <hr style="border: 1px solid #eee; margin: 20px 0;" />
+              <p style="font-size: 12px; color: #666;">
+                Mode Test (Sans domaine) : Ce mail est envoyé à l'admin uniquement. 
+                Le client a vu le texte sur son écran.
+              </p>
+            </div>
+          `
+        });
+      } catch (emailError) {
+        console.error("❌ Erreur envoi email:", emailError);
+      }
+    }
+
+    return NextResponse.json({ result: generatedText });
+
+  } catch (error) {
+    console.error('Error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
