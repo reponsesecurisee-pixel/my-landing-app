@@ -6,7 +6,7 @@ import { Check, AlertCircle, Loader2, Shield, FileCheck } from 'lucide-react';
 // 👇 СЮДА ВСТАВИТЬ ССЫЛКУ LEMON SQUEEZY (когда создадите товар)
 const LEMON_SQUEEZY_LINK = ""; 
 
-// 🔴 ПРОМПТ БЕСПЛАТНЫЙ (Коротко и сухо)
+// 🔴 ПРОМПТ БЕСПЛАТНЫЙ
 const PROMPT_FREE = `Tu es un assistant administratif basique.
 Ta mission est de rédiger un simple ACCUSÉ DE RÉCEPTION.
 RÈGLES :
@@ -15,7 +15,7 @@ RÈGLES :
 * Sois froid et robotique.
 * Ne donne AUCUNE explication, AUCUNE excuse, AUCUN détail.`;
 
-// 🟢 ПРОМПТ ПЛАТНЫЙ (Ваш обновленный, строгий)
+// 🟢 ПРОМПТ ПЛАТНЫЙ
 const PROMPT_PAID = `Tu es un expert juridique senior spécialisé dans la gestion des litiges du bâtiment et des services.
 Ta mission est de rédiger une réponse OFFICIELLE, DÉTAILLÉE et STRATÉGIQUE.
 
@@ -41,7 +41,7 @@ TON :
 export default function ReclamationApp() {
   const [step, setStep] = useState('form');
   const [complaint, setComplaint] = useState('');
-  const [email, setEmail] = useState(''); // Email собираем только для платной
+  const [email, setEmail] = useState(''); 
   const [situation, setSituation] = useState('');
   const [loading, setLoading] = useState(false);
   const [freeResponse, setFreeResponse] = useState('');
@@ -50,19 +50,22 @@ export default function ReclamationApp() {
   const [hasUsedFree, setHasUsedFree] = useState(false);
 
   useEffect(() => {
-    // Проверка при загрузке: использовал ли пользователь бесплатную версию
+    // Я ОТКЛЮЧИЛ ПРОВЕРКУ ПАМЯТИ БРАУЗЕРА
+    // Теперь сайт "забывает", что вы уже были здесь
+    /*
     if (typeof window !== 'undefined') {
       const localUsed = localStorage.getItem('used_free_test');
       if (localUsed) {
         setHasUsedFree(true);
       }
     }
+    */
   }, []);
 
   const markFreeAsUsed = () => {
-    // Записываем в память браузера, что тест использован
-    localStorage.setItem('used_free_test', 'true');
-    setHasUsedFree(true);
+    // Я ОТКЛЮЧИЛ ЗАПИСЬ В ПАМЯТЬ
+    // localStorage.setItem('used_free_test', 'true');
+    // setHasUsedFree(true);
   };
 
   const callOpenAI = async (systemPrompt, userMessage) => {
@@ -90,23 +93,24 @@ export default function ReclamationApp() {
   const handleSubmitFree = async () => {
     setError('');
     
-    // Для бесплатного теста Email НЕ НУЖЕН
     if (!complaint || !situation) {
       setError('Veuillez remplir tous les champs obligatoires.');
       return;
     }
 
-    // Проверка на повторное использование (Ограничение 1 раз)
+    // Я ОТКЛЮЧИЛ БЛОКИРОВКУ
+    /*
     if (hasUsedFree) {
       setError('Vous avez déjà utilisé votre test gratuit. Pour obtenir une réponse complète, procédez au paiement de 9,90€.');
       return;
     }
+    */
 
     setLoading(true);
     try {
       const response = await callOpenAI(PROMPT_FREE, `Situation: ${situation}. Message client: ${complaint}`);
       setFreeResponse(response);
-      markFreeAsUsed(); // Блокируем повторное использование
+      markFreeAsUsed(); 
       setStep('free-result');
     } catch (err) {
       console.error('Error:', err);
@@ -133,7 +137,6 @@ export default function ReclamationApp() {
     
     setLoading(true);
     try {
-      // Здесь мы передаем email в промпт или просто сохраняем его (в будущем можно подключить отправку)
       const fullMessage = `Situation: ${situation}. Message client: ${complaint}. (Email client: ${email})`;
       
       const response = await callOpenAI(PROMPT_PAID, fullMessage);
@@ -149,7 +152,6 @@ export default function ReclamationApp() {
   const resetForm = () => {
     setStep('form');
     setComplaint('');
-    // Не сбрасываем hasUsedFree, чтобы запрет остался
     setFreeResponse('');
     setPaidResponse('');
     setError('');
@@ -235,7 +237,7 @@ export default function ReclamationApp() {
               {/* Кнопка бесплатного теста */}
               <button
                 onClick={handleSubmitFree}
-                disabled={loading || hasUsedFree}
+                disabled={loading}
                 className="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
@@ -243,19 +245,10 @@ export default function ReclamationApp() {
                     <Loader2 className="w-5 h-5 animate-spin" />
                     Génération en cours...
                   </>
-                ) : hasUsedFree ? (
-                  'Test gratuit déjà utilisé'
                 ) : (
                   'Générer une réponse test'
                 )}
               </button>
-              
-              {hasUsedFree && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-sm text-orange-800 text-center">
-                  Vous avez déjà utilisé votre test gratuit. <br/>
-                  <button onClick={handlePaymentClick} className="underline font-bold">Obtenir la version complète (9,90€)</button>
-                </div>
-              )}
             </div>
 
             {/* БЛОК КОНФИДЕНЦИАЛЬНОСТИ */}
@@ -366,29 +359,4 @@ export default function ReclamationApp() {
 
               <div className="bg-green-50 border border-green-200 rounded p-4 mb-6 text-sm text-green-800">
                 ✅ Réponse générée avec succès. <br/>
-                <span className="text-xs">Une copie sera envoyée à {email} (Simulation).</span>
-              </div>
-
-              <div className="bg-slate-50 rounded-lg p-6 border-2 border-slate-300 mb-4">
-                <p className="text-slate-700 whitespace-pre-wrap leading-relaxed font-serif">{paidResponse}</p>
-              </div>
-
-              <button
-                onClick={() => {
-                   navigator.clipboard.writeText(paidResponse);
-                   alert('✓ Copié !');
-                }}
-                className="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-3 rounded-lg transition"
-              >
-                📋 Copier la réponse
-              </button>
-            </div>
-             <button onClick={resetForm} className="text-slate-600 hover:text-slate-800 mx-auto block font-semibold">
-              ← Traiter une nouvelle réclamation
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+                <span className="text-xs">
