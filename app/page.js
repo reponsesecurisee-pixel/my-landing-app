@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Check, AlertCircle, Loader2, Shield, Briefcase, Scale, AlertTriangle, XCircle } from 'lucide-react';
 
 // 👇 СЮДА ВСТАВИТЬ ССЫЛКУ LEMON SQUEEZY
-const LEMON_SQUEEZY_LINK = ""; 
+const LEMON_SQUEEZY_LINK = "https://reponse-securisee.lemonsqueezy.com/checkout/buy/d4e3b498-d99e-4d28-bb39-af9e1ef5de6b"; 
 
 export default function ReclamationApp() {
   const [step, setStep] = useState('form');
