@@ -134,6 +134,7 @@ export default function ReclamationApp() {
     }
 
     if (!complaint || !situation) {
+      alert("✍️ Veuillez décrire la situation et le message du client avant de générer !");
       setError('Veuillez remplir tous les champs obligatoires.');
       return;
     }
@@ -152,6 +153,7 @@ export default function ReclamationApp() {
 
   const handleDirectBuy = () => {
     if (!complaint || !situation) {
+      alert("✍️ Veuillez remplir le message du client et choisir la situation pour que nous puissions générer votre réponse !");
       setError('Veuillez décrire la situation avant de continuer.');
       return;
     }
@@ -160,7 +162,7 @@ export default function ReclamationApp() {
 
   const handlePaymentClick = () => {
     if (!email || !email.includes('@')) {
-       alert("Veuillez entrer votre email pour recevoir le dossier.");
+       alert("✉️ Veuillez entrer votre email pour recevoir le dossier.");
        return;
     }
 
@@ -371,7 +373,7 @@ export default function ReclamationApp() {
                      <li className="flex gap-2"><Check className="w-3 h-3 text-green-600"/> Neutre & Factuel</li>
                    </ul>
                    <div className="mt-auto pt-4 border-t border-slate-300 w-full">
-                     <span className="block text-xs text-slate-500">Participation</span>
+                     <span className="block text-xs text-slate-500">Prix unique</span>
                      <span className="font-bold text-2xl text-green-600">9,90€</span>
                    </div>
                 </div>
@@ -450,8 +452,11 @@ export default function ReclamationApp() {
               >
                 📋 Copier le texte
               </button>
-              <p className="text-center text-sm text-slate-500 mt-4">
-                 Une copie est en cours d'envoi à {email}
+              
+              {/* ВОТ ТУТ МЫ ИЗМЕНИЛИ ТЕКСТ НА БОЛЕЕ УМНЫЙ */}
+              <p className="text-center text-sm text-slate-500 mt-4 bg-green-50 p-2 rounded border border-green-100">
+                 <Check className="w-3 h-3 inline mr-1 text-green-600"/>
+                 Une copie vous sera transmise par email <strong>après validation des services</strong>.
               </p>
             </div>
              <button onClick={resetForm} className="text-slate-500 hover:text-slate-700 mx-auto block">Nouveau dossier</button>
