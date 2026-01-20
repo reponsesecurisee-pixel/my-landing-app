@@ -6,7 +6,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = "reponse.securisee@gmail.com"; 
 
-// --- ВАШИ ОРИГИНАЛЬНЫЕ ПРОМПТЫ ---
+// --- ВАШИ ОРИГИНАЛЬНЫЕ ПРОМПТЫ С УЧЕТОМ СТРАТЕГИИ МИНИМАЛИЗМА ---
 
 const PROMPT_FREE = `Tu es un assistant spécialisé dans la rédaction de réponses professionnelles à des réclamations clients en France.
 Ta mission est de proposer une première ébauche de réponse, à titre indicatif.
@@ -27,55 +27,43 @@ Longueur : 4 à 6 lignes maximum.`;
 
 const PROMPT_PAID = `Tu es un assistant expert en rédaction de réponses professionnelles à des réclamations clients pour des entreprises de services en France.
 Ta mission est de rédiger une réponse écrite COMPLÈTE, PRÊTE À ENVOYER, destinée à être utilisée telle quelle par le client.
-RÈGLES IMPÉRATIVES :
+
+RÈGLES IMPÉRATIVES DE SÉCURITÉ :
 * Ne jamais reconnaître une faute, une erreur ou une responsabilité, explicitement ou implicitement
 * Ne jamais présenter d'excuses ou exprimer des regrets
 * Ne jamais promettre de remboursement, de compensation ou de geste commercial
 * Ne pas valider les reproches du client
 * Utiliser un registre professionnel, factuel et posé
+
+PHILOSOPHIE DU "MOINS EN DIT, MOINS ON S'EXPOSE" :
+* La sobriété est ta meilleure protection : chaque mot inutile est une opportunité pour un avocat adverse.
+* Sois poli et attentif, mais extrêmement laconique.
+* Ne donne aucune explication technique superflue qui pourrait être interprétée comme une justification.
+* Ton but est de ne laisser AUCUNE prise juridique à la partie adverse.
+
 IMPORTANT - INTÉGRATION DES DÉTAILS :
-* Analyse le message du client et INTÈGRE directement les détails spécifiques :
-  - Type de travaux/service mentionné
-  - Période ou date évoquée
-  - Nature précise de la réclamation
-* NE JAMAIS utiliser de placeholders comme [date], [sujet], [nom]
-* Si une information manque, utilise une formulation neutre générique
-* La réponse doit être DIRECTEMENT utilisable sans modification
-TON ET STYLE :
-* Français professionnel, courtois mais ferme
-* Formulations polies et institutionnelles
-* Absence totale de familiarité ou d'empathie émotionnelle
-* Posture calme, maîtrisée et non défensive
+* Analyse le message du client et INTÈGRE directement les détails spécifiques (travaux, dates, nature) sans placeholders [crochets].
+* La réponse doit être DIRECTEMENT utilisable sans modification.
+
 STRUCTURE ATTENDUE :
-1. Formule d'introduction polie et accusé de réception
-2. Prise en compte des éléments mentionnés, sans validation des reproches
-3. Position neutre indiquant que les éléments ne permettent pas, à ce stade, d'établir une responsabilité
-4. Rappel du cadre habituel d'analyse (échange factuel / examen contradictoire)
-5. Proposition encadrée de poursuite de l'échange, sans engagement
-6. Formule de conclusion polie
+1. Formule d'introduction polie et accusé de réception neutre.
+2. Prise en compte factuelle des éléments mentionnés (sans validation).
+3. Position neutre : "les éléments en notre possession ne permettent pas d'établir une responsabilité".
+4. Cadre d'analyse : maintien de l'échange de manière factuelle et constructive.
+5. Formule de conclusion polie.
 
-NOUVELLES INSTRUCTIONS TACTIQUES (À AJOUTER APRÈS LA LETTRE) :
-* [CONSEILS TACTIQUES] : 
-  - Recommandez l'envoi impératif en Recommandé avec Accusé de Réception (LRAR).
-  - RÈGLE DES 48H : Conseillez de ne répondre à aucun appel téléphonique du client pendant les 48h suivant l'envoi pour figer l'écrit et laisser les émotions retomber.
+CONSEILS TACTIQUES (À AJOUTER APRÈS LA LETTRE) :
+- Envoi LRAR : seule preuve légale de votre réactivité.
+- RÈGLE DES 48H : Ne répondez à aucun appel téléphonique pendant les 48h suivant l'envoi. Figez l'échange sur l'écrit pour éviter les dérapages émotionnels.
 
-IMPORTANT - AVERTISSEMENT LÉGAL :
-Ajoute obligatoirement ce texte en gras à la fin :
-"Avertissement : Ce document est un outil d'aide à la rédaction administrative et ne constitue pas un conseil juridique professionnel. En cas de litige grave, consultez un avocat."
-
-IMPORTANT :
-* La réponse doit être prête à l'envoi
-* Varie les formulations à chaque génération
-* Intègre les détails spécifiques du cas sans utiliser de crochets`;
-
-// --- ЛОГИКА СЕРВЕРА ---
+AVERTISSEMENT LÉGAL OBLIGATOIRE (EN GRAS À LA FIN) :
+"Avertissement : Ce document est un outil d'aide à la rédaction administrative et ne constitue pas un conseil juridique professionnel. En cas de litige grave, consultez un avocat."`;
 
 export async function POST(req) {
   try {
     const body = await req.json();
     const { type, email, message, name, complaint, situation } = body;
 
-    // 1. ОБРАБОТКА ПОДДЕРЖКИ
     if (type === 'feedback') {
       if (process.env.RESEND_API_KEY) {
         try {
@@ -83,30 +71,26 @@ export async function POST(req) {
             from: 'onboarding@resend.dev',
             to: ADMIN_EMAIL,
             subject: `🔔 SUPPORT: Message de ${name}`,
-            html: `<h3>Nouveau message de support</h3><p><strong>Nom:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong> ${message}</p>`
+            html: `<h3>Support</h3><p><strong>Nom:</strong> ${name}</p><p><strong>Message:</strong> ${message}</p>`
           });
-        } catch (err) { console.error("Support email error:", err); }
+        } catch (err) { console.error(err); }
       }
       return NextResponse.json({ result: "Message reçu" });
     }
 
-    // 2. ГЕНЕРАЦИЯ ОТВЕТА (AI)
     const systemPrompt = type === 'free' ? PROMPT_FREE : PROMPT_PAID;
-    const currentTemp = type === 'free' ? 0.5 : 0.7; // Повышенная вариативность для платных
-
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Situation: ${situation}. Message client: ${complaint}` },
       ],
-      temperature: currentTemp,
-      max_tokens: type === 'free' ? 400 : 1500,
+      temperature: 0.7, // Вариативность для уникальности ответов
+      max_tokens: type === 'free' ? 400 : 1200,
     });
 
     const generatedText = completion.choices[0].message.content;
 
-    // 3. УВЕДОМЛЕНИЕ О ЗАКАЗЕ
     if (type === 'paid' && process.env.RESEND_API_KEY) {
       try {
         await resend.emails.send({
@@ -115,13 +99,13 @@ export async function POST(req) {
           subject: `💰 COMMANDE RÉUSSIE (${email})`,
           html: `<div style="white-space: pre-wrap;">${generatedText}</div>`
         });
-      } catch (e) { console.error("Order email error:", e); }
+      } catch (e) { console.error(e); }
     }
 
     return NextResponse.json({ result: generatedText });
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error(error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
