@@ -6,7 +6,9 @@ import { Check, AlertCircle, Loader2, Shield, Briefcase, Scale, AlertTriangle, X
 const LEMON_SQUEEZY_LINK = "https://reponse-securisee.lemonsqueezy.com/checkout/buy/d4e3b498-d99e-4d28-bb39-af9e1ef5de6b"; 
 
 export default function ReclamationApp() {
+  
   const [step, setStep] = useState('form');
+  const [adminContent, setAdminContent] = useState({});
   const [complaint, setComplaint] = useState('');
   const [email, setEmail] = useState(''); 
   const [situation, setSituation] = useState('');
@@ -24,6 +26,10 @@ export default function ReclamationApp() {
   const [stats, setStats] = useState({ views: 0, tests: 0, sales: 0 });
 
   useEffect(() => {
+    const storedAdmin = localStorage.getItem("admin_content");
+if (storedAdmin) {
+  setAdminContent(JSON.parse(storedAdmin));
+}
     const v = parseInt(localStorage.getItem('stats_v') || '0');
     const t = parseInt(localStorage.getItem('stats_t') || '0');
     const s = parseInt(localStorage.getItem('stats_s') || '0');
@@ -124,8 +130,10 @@ export default function ReclamationApp() {
             <Shield className="w-3 h-3 text-blue-600"/> Gilet Pare-balles Administratif
           </div>
           <h1 className="text-3xl md:text-5xl font-black text-[#1E293B] mb-8 leading-[1.2] tracking-tight">
-            Une mauvaise réponse écrite peut créer un risque juridique
-          </h1>
+  {adminContent.heroTitle ||
+    "Une mauvaise réponse écrite peut créer un risque juridique"}
+</h1>
+
           <p className="text-lg md:text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
             Générez une réponse professionnelle и juridiquement neutre, sans reconnaissance de faute ni engagement.
           </p>
