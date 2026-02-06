@@ -1,4 +1,5 @@
 import './globals.css';
+import PostHogProvider from './PostHogProvider';
 
 export const metadata = {
   title: "Assistant Réclamation",
@@ -8,7 +9,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="fr">
-      <body>{children}</body>
+     <body>
+    <PostHogProvider />
+    {children}
+  </body> 
     </html>
   );
 }
