@@ -1,5 +1,5 @@
 import './globals.css';
-import PostHogProvider from './PostHogProvider';
+import Script from 'next/script';
 
 export const metadata = {
   title: "Assistant Réclamation",
@@ -9,10 +9,23 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="fr">
-     <body>
-    <PostHogProvider />
-    {children}
-  </body> 
+      <head>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-LB3ZQGKBS0"
+          strategy="afterInteractive"
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-LB3ZQGKBS0');
+          `}
+        </Script>
+      </head>
+      <body>
+        {children}
+      </body>
     </html>
   );
 }
